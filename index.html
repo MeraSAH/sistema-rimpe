@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mueblería y Cerrajería Benjamín - Calidad y Seguridad para tu Hogar en Quito, Ecuador">
+    <meta name="keywords" content="mueblería, cerrajería, puertas, muebles, Quito, Ecuador">
+    <title>Mueblería y Cerrajería Benjamín - Calidad y Seguridad para tu Hogar</title>
+    
+    <!-- Estilos -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <!-- Header / Navegación -->
+    <header id="header" class="header">
+        <div class="container">
+            <div class="header-content">
+                <!-- Logo -->
+                <div class="logo" onclick="navigateTo('inicio'); return false;">
+                    <div class="logo-icon">B</div>
+                    <div class="logo-text">
+                        <h1>Benjamín</h1>
+                        <p>Mueblería & Cerrajería</p>
+                    </div>
+                </div>
+
+                <!-- Menú Desktop -->
+                <nav class="nav-desktop">
+                    <a href="javascript:void(0)" onclick="navigateTo('inicio'); return false;">
+                        <i data-lucide="home"></i> Inicio
+                    </a>
+                    <a href="javascript:void(0)" onclick="navigateTo('sobre-nosotros'); return false;">
+                        Sobre Nosotros
+                    </a>
+                    
+                    <!-- Dropdown Catálogo -->
+                    <div class="dropdown">
+                        <a href="javascript:void(0)" class="dropdown-toggle">
+                            Catálogo <i data-lucide="chevron-down"></i>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a href="javascript:void(0)" onclick="navigateTo('catalogo-muebleria-interior'); return false;">Mueblería Interior</a>
+                            <a href="javascript:void(0)" onclick="navigateTo('catalogo-muebleria-exterior'); return false;">Mueblería Exterior</a>
+                            <a href="javascript:void(0)" onclick="navigateTo('catalogo-cerrajeria'); return false;">Cerrajería Exterior</a>
+                        </div>
+                    </div>
+                    
+                    <a href="javascript:void(0)" onclick="navigateTo('galeria'); return false;">
+                        <i data-lucide="image"></i> Galería
+                    </a>
+                    <a href="javascript:void(0)" onclick="navigateTo('testimonios'); return false;">
+                        <i data-lucide="star"></i> Testimonios
+                    </a>
+                    <a href="javascript:void(0)" onclick="navigateTo('blog'); return false;">
+                        <i data-lucide="book-open"></i> Blog
+                    </a>
+                    <a href="javascript:void(0)" onclick="navigateTo('contacto'); return false;">
+                        <i data-lucide="phone"></i> Contacto
+                    </a>
+                    <a href="javascript:void(0)" onclick="navigateTo('perfil'); return false;" class="btn-perfil">
+                        <i data-lucide="user"></i>
+                        <span id="userName">Perfil</span>
+                    </a>
+                    <a href="javascript:void(0)" onclick="navigateTo('carrito'); return false;" class="btn-cart">
+                        <i data-lucide="shopping-cart"></i>
+                        <span id="cartCount" class="cart-badge">0</span>
+                    </a>
+                </nav>
+
+                <!-- Botón Menú Mobile -->
+                <button class="menu-toggle" id="menuToggle">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+
+            <!-- Menú Mobile -->
+            <nav class="nav-mobile" id="navMobile">
+                <a href="javascript:void(0)" onclick="navigateTo('inicio'); closeMobileMenu(); return false;">Inicio</a>
+                <a href="javascript:void(0)" onclick="navigateTo('sobre-nosotros'); closeMobileMenu(); return false;">Sobre Nosotros</a>
+                <a href="javascript:void(0)" onclick="navigateTo('catalogo-muebleria-interior'); closeMobileMenu(); return false;">Mueblería Interior</a>
+                <a href="javascript:void(0)" onclick="navigateTo('catalogo-muebleria-exterior'); closeMobileMenu(); return false;">Mueblería Exterior</a>
+                <a href="javascript:void(0)" onclick="navigateTo('catalogo-cerrajeria'); closeMobileMenu(); return false;">Cerrajería Exterior</a>
+                <a href="javascript:void(0)" onclick="navigateTo('galeria'); closeMobileMenu(); return false;">Galería</a>
+                <a href="javascript:void(0)" onclick="navigateTo('testimonios'); closeMobileMenu(); return false;">Testimonios</a>
+                <a href="javascript:void(0)" onclick="navigateTo('blog'); closeMobileMenu(); return false;">Blog</a>
+                <a href="javascript:void(0)" onclick="navigateTo('contacto'); closeMobileMenu(); return false;">Contacto</a>
+                <a href="javascript:void(0)" onclick="navigateTo('perfil'); closeMobileMenu(); return false;">Perfil</a>
+                <a href="javascript:void(0)" onclick="navigateTo('carrito'); closeMobileMenu(); return false;">Carrito (<span id="cartCountMobile">0</span>)</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main id="mainContent" class="main-content">
+        <!-- El contenido dinámico se carga aquí -->
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Cargando...</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h3>Mueblería y Cerrajería "Benjamín"</h3>
+                    <p>Calidad, confianza y diseño a tu medida</p>
+                    <p class="footer-experience">+20 años de experiencia artesanal</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Contacto</h4>
+                    <p><i data-lucide="phone"></i> +593 98 599 8615</p>
+                    <p><i data-lucide="mail"></i> mycbenjamin@gmail.com</p>
+                    <p><i data-lucide="map-pin"></i> Guamaní, Quito - Ecuador</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Enlaces Rápidos</h4>
+                    <a href="javascript:void(0)" onclick="navigateTo('inicio'); return false;">Inicio</a>
+                    <a href="javascript:void(0)" onclick="navigateTo('sobre-nosotros'); return false;">Sobre Nosotros</a>
+                    <a href="javascript:void(0)" onclick="navigateTo('contacto'); return false;">Contacto</a>
+                    <a href="javascript:void(0)" onclick="navigateTo('perfil'); return false;">Perfil</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Síguenos</h4>
+                    <div class="social-links">
+                        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                            <i data-lucide="facebook"></i>
+                        </a>
+                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                            <i data-lucide="instagram"></i>
+                        </a>
+                        <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                            <i data-lucide="youtube"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Mueblería y Cerrajería "Benjamín". Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Botón flotante WhatsApp -->
+    <a href="https://wa.me/593985998615" target="_blank" rel="noopener noreferrer" class="whatsapp-float" aria-label="Contactar por WhatsApp">
+        <i data-lucide="message-circle"></i>
+    </a>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/pages.js"></script>
+    <script src="js/main.js"></script>
+    
+    <!-- Inicializar Lucide Icons -->
+    <script>
+        // Inicializar iconos cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
