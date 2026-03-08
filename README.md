@@ -20,28 +20,6 @@ Queda estrictamente prohibida la:
  * Catálogo Digital: Visualización de cerrajería (puertas de tol) y carpintería personalizada.
  * Cotizador Automático: Integración con WhatsApp para pedidos directos.
  * Consulta de Documentos: Repositorio de notas de venta consultables mediante C.I./RUC.
-📁 Estructura del Software
-muebleria-benjamin/
-├── index.html          # Interfaz unificada
-├── css/
-│   ├── styles.css      # Identidad corporativa
-│   └── responsive.css  # Adaptación multiplataforma
-├── js/
-│   ├── data.js         # Configuración del Negocio (RUC/Admin)
-│   ├── storage.js      # Motor de persistencia local
-│   ├── admin.js        # Lógica de negocio y RIMPE
-│   ├── ui.js           # Componentes de usuario
-│   └── main.js         # Inicialización del sistema
-└── README.md           # Documentación y Licencia
-
-⚙️ Configuración del Propietario
-Para activar el sistema, el administrador debe configurar sus credenciales en js/data.js:
-const configPrivada = {
-    propietario: "Mueblería y Cerrajería Benjamín",
-    ruc_emisor: "17XXXXXXXX001",
-    pass_admin: "CAMBIAR_ESTO_INMEDIATAMENTE", // Credencial de acceso al panel
-    whatsapp_destino: "593985998615"
-};
 
 💾 Seguridad de los Datos
  * Persistencia: El sistema utiliza tecnología de almacenamiento local. Los datos residen exclusivamente en el dispositivo del propietario.
