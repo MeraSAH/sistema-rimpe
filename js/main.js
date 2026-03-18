@@ -5,7 +5,7 @@
 let currentPage = 'inicio';
 
 // Navegar a una página
-function navigateTo(page, param = null) {
+async function navigateTo(page, param = null) {
     currentPage = page;
     
     // Cerrar menú mobile si está abierto
@@ -60,19 +60,52 @@ function navigateTo(page, param = null) {
             content = renderAdminLogin();
             break;
         case 'admin-panel':
+            // ☁️ Sincronizar con Supabase antes de mostrar admin
+            if (typeof sincronizarDesdeSupabase === 'function') {
+                mainContent.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Cargando datos...</p></div>';
+                await sincronizarDesdeSupabase();
+            }
             content = renderAdminPanel();
             break;
         case 'admin-nueva-nota':
             content = renderNuevaNota();
             break;
         case 'admin-historial':
+            if (typeof sincronizarDesdeSupabase === 'function') {
+                mainContent.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Cargando notas...</p></div>';
+                await sincronizarDesdeSupabase();
+            }
             content = renderAdminHistorial();
             break;
         case 'admin-productos':
+            if (typeof sincronizarDesdeSupabase === 'function') {
+                mainContent.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Cargando productos...</p></div>';
+                await sincronizarDesdeSupabase();
+            }
             content = renderAdminProductos();
             break;
         case 'admin-clientes':
+            if (typeof sincronizarDesdeSupabase === 'function') {
+                mainContent.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Cargando clientes...</p></div>';
+                await sincronizarDesdeSupabase();
+            }
             content = renderAdminClientes();
+            break;
+        case 'admin-estadisticas':
+            if (typeof sincronizarDesdeSupabase === 'function') {
+                mainContent.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Cargando estadísticas...</p></div>';
+                await sincronizarDesdeSupabase();
+            }
+            content = renderAdminEstadisticas();
+            break;
+        case 'admin-galeria':
+            content = renderAdminGaleria();
+            break;
+        case 'admin-blog':
+            content = renderAdminBlog();
+            break;
+        case 'blog-detalle':
+            content = renderBlogDetalle(param);
             break;
         default:
             content = renderInicio();
@@ -100,7 +133,7 @@ function updateNavState() {
 // INICIALIZACIÓN DE LA APLICACIÓN
 // ========================================
 
-function initApp() {
+async function initApp() {
     console.log('🏗️ Inicializando Mueblería y Cerrajería Benjamín...');
     
     // Verificar si hay usuario guardado
@@ -115,8 +148,49 @@ function initApp() {
     // Actualizar nombre de usuario
     updateUserNameDisplay();
     
-    // Cargar página inicial
-    navigateTo('inicio');
+    // Inicializar Supabase Auth (restaura sesión si la hay)
+    if (typeof initSupabaseAuth === 'function') {
+        await initSupabaseAuth();
+        // Redirigir automáticamente si ya hay sesión activa
+        onAuthChange((event) => {
+            if (event === 'signed_out' && currentPage && currentPage.startsWith('admin')) {
+                navigateTo('admin-login');
+            }
+        });
+    }
+
+    // Sincronizar con Supabase en background (no bloquea la UI)
+    if (typeof sincronizarDesdeSupabase === 'function') {
+        sincronizarDesdeSupabase().catch(console.warn);
+    }
+
+    // ── Opción 2: URL directa /#admin ──────────────────────────
+    // Permite acceder escribiendo sistema-rimpe.vercel.app/#admin
+    const hash = window.location.hash.replace('#', '').trim().toLowerCase();
+    if (hash === 'admin' || hash === 'admin-login' || hash === 'admin-panel') {
+        navigateTo('admin-login');
+    } else {
+        navigateTo('inicio');
+    }
+
+    // ── Opción 3: Atajo de teclado Ctrl+Shift+A ─────────────
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+            e.preventDefault();
+            navigateTo('admin-login');
+        }
+    });
+
+    // Mostrar hint del atajo al pasar por el footer
+    document.addEventListener('mouseover', (e) => {
+        if (e.target.classList.contains('admin-footer-btn')) {
+            const hint = document.getElementById('kb-hint');
+            if (hint) { hint.classList.add('show'); setTimeout(() => hint.classList.remove('show'), 2500); }
+        }
+    });
+
+    // Sincronizar hash cuando cambia la página
+    const _origNavigate = window._navigatePage;
     
     console.log('✅ Aplicación inicializada correctamente');
 }
@@ -225,4 +299,9 @@ if (typeof window !== 'undefined') {
     };
     
     console.log('💡 Tip: Usa benjaminApp en la consola para debugging');
+}
+// ─── Helper de colores ────────────────────────────────────────────────────────
+function getColoresConCodigo() {
+    if (typeof codigosColor === 'undefined') return [];
+    return Object.entries(codigosColor).map(([codigo, info]) => ({ codigo, ...info }));
 }

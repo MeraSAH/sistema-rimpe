@@ -1580,3 +1580,648 @@
 .text-primary {
     color: var(--color-primary) !important;
 }
+/* ========================================
+   MEJORAS ADMIN — NUEVAS FUNCIONALIDADES
+   ======================================== */
+
+/* Utility: hidden */
+.hidden { display: none !important; }
+
+/* Utility: flex gap */
+.flex { display: flex; }
+.flex-wrap { flex-wrap: wrap; }
+.gap-1 { gap: 0.25rem; }
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 1rem; }
+.items-center { align-items: center; }
+
+/* btn-sm */
+.btn-sm {
+    padding: 5px 12px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+}
+
+/* btn-close */
+.btn-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-gray-500);
+    padding: 4px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    transition: background 0.2s, color 0.2s;
+}
+.btn-close:hover {
+    background: var(--color-gray-100);
+    color: var(--color-gray-800);
+}
+
+/* ── Abonos ── */
+.abono-row {
+    background: #f0fdf4;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    border-left: 4px solid #10b981;
+}
+
+/* ── Stat box (usado en modal clientes) ── */
+.stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+    background: var(--color-gray-50);
+    border-radius: 10px;
+    border: 1px solid var(--color-gray-200);
+}
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--color-primary);
+}
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--color-gray-600);
+    margin-top: 2px;
+}
+
+/* ── Badge info ── */
+.badge-info {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+/* ── color-info variable si no existe ── */
+:root {
+    --color-info: #3b82f6;
+}
+
+/* ── Filtros de historial ── */
+.filter-bar {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+/* ── Mejora modal ── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 9990;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    backdrop-filter: blur(3px);
+}
+.modal-content {
+    background: var(--color-white);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px rgba(0,0,0,.3);
+    animation: modalIn .25s ease-out;
+}
+@keyframes modalIn {
+    from { transform: scale(.92); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+}
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--color-gray-200);
+    position: sticky;
+    top: 0;
+    background: var(--color-white);
+    z-index: 1;
+}
+.modal-header h2 { font-size: 1.1rem; margin: 0; }
+.modal-body { padding: 1.5rem; }
+
+/* ── Progress bar mejorada ── */
+.progress-bar {
+    width: 100%;
+    height: 28px;
+    background: var(--color-gray-200);
+    border-radius: 20px;
+    overflow: hidden;
+}
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-success), var(--color-primary), #f59e0b);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+    transition: width 0.6s ease;
+    min-width: 40px;
+}
+
+/* ── Stat cards del admin ── */
+.stat-card {
+    background: var(--color-white);
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid transparent;
+}
+.stat-card svg { width: 32px; height: 32px; flex-shrink: 0; }
+.stat-card h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: .1rem; }
+.stat-card p  { font-size: .8rem; color: var(--color-gray-600); margin: 0; }
+.stat-card small { font-size: .7rem; color: var(--color-gray-500); }
+.stat-primary { border-color: var(--color-primary); }
+.stat-primary svg { color: var(--color-primary); }
+.stat-success { border-color: var(--color-success); }
+.stat-success svg { color: var(--color-success); }
+.stat-info    { border-color: var(--color-info); }
+.stat-info svg { color: var(--color-info); }
+.stat-warning { border-color: #f59e0b; }
+.stat-warning svg { color: #f59e0b; }
+
+/* ── Action cards del panel ── */
+.action-card {
+    background: var(--color-white);
+    border-radius: 14px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    border: 2px solid var(--color-gray-200);
+    transition: all .2s;
+    box-shadow: var(--shadow-sm);
+}
+.action-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 8px 20px rgba(180,83,9,.15);
+    transform: translateY(-2px);
+}
+.action-card svg {
+    width: 40px; height: 40px;
+    color: var(--color-primary);
+    margin-bottom: .75rem;
+}
+.action-card h3 { font-size: 1rem; margin-bottom: .25rem; }
+.action-card p  { font-size: .8rem; color: var(--color-gray-600); margin: 0; }
+
+/* ── Admin header ── */
+.admin-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.admin-header h1 { font-size: 1.5rem; margin-bottom: .25rem; }
+.admin-header p  { color: var(--color-gray-600); font-size: .875rem; margin: 0; }
+
+/* ── Responsive mobile admin ── */
+@media (max-width: 640px) {
+    .admin-header { flex-direction: column; }
+    .admin-header .flex { flex-wrap: wrap; }
+    .stat-card { padding: 1rem; }
+    .stat-card h3 { font-size: 1.2rem; }
+    .action-card { padding: 1rem; }
+    .modal-content { max-height: 95vh; border-radius: 12px; }
+    .abono-row { grid-template-columns: 1fr 1fr !important; }
+    .grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* ── Tabla responsive ── */
+.table-responsive {
+    overflow-x: auto;
+    border-radius: 10px;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ── Badge estados de nota ── */
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: .75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.badge-pendiente { background: #fef9c3; color: #854d0e; }
+.badge-pagada    { background: #dcfce7; color: #166534; }
+.badge-parcial   { background: #fef3c7; color: #92400e; }
+.badge-cancelada { background: #fee2e2; color: #991b1b; }
+
+/* ── Login admin ── */
+.admin-login-container { max-width: 420px; margin: 3rem auto; }
+
+/* ── Carrito oculto hasta hover (fix zoom) ── */
+.btn-cart {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.cart-badge {
+    position: absolute;
+    top: -6px;
+    right: -8px;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--color-white);
+}
+
+/* ========================================
+   AUTH CLIENTE — Login/Registro tabs
+   ======================================== */
+.auth-tabs {
+    display: flex;
+    background: var(--color-gray-100);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+}
+.auth-tab {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    font-weight: 700;
+    font-size: .875rem;
+    cursor: pointer;
+    color: var(--color-gray-600);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    transition: all .2s;
+}
+.auth-tab.active {
+    background: var(--color-white);
+    color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+.auth-tab svg { width: 16px; height: 16px; }
+
+/* ─── Redes sociales en contacto ── */
+.social-links-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: .75rem;
+}
+.social-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: .8rem;
+    font-weight: 700;
+    text-decoration: none;
+    background: var(--color-gray-100);
+    color: var(--color-gray-700);
+    transition: all .2s;
+}
+.social-pill:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+.social-yt  { background: #fee2e2; color: #dc2626; }
+.social-tt  { background: #f3f4f6; color: #000; }
+.social-tw  { background: #eff6ff; color: #1d4ed8; }
+
+/* ========================================
+   CATÁLOGO DIGITAL MEJORADO
+   ======================================== */
+
+/* Hero del catálogo */
+.catalogo-hero {
+    text-align: center;
+    padding: 2.5rem 1rem 2rem;
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border-radius: 20px;
+    color: #fff;
+    margin-bottom: 2rem;
+}
+.catalogo-hero-icon { font-size: 3.5rem; margin-bottom: .75rem; }
+.catalogo-hero h1   { font-size: 2rem; font-weight: 900; margin-bottom: .5rem; }
+.catalogo-hero p    { color: #94a3b8; font-size: 1rem; margin-bottom: 1.5rem; }
+.catalogo-tabs      { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; }
+.catalogo-tab {
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: 2px solid rgba(255,255,255,.2);
+    background: transparent;
+    color: #cbd5e1;
+    font-weight: 700;
+    font-size: .85rem;
+    cursor: pointer;
+    transition: all .2s;
+}
+.catalogo-tab:hover, .catalogo-tab.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+}
+
+/* Grid de productos */
+.catalogo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Card del producto */
+.catalogo-card {
+    background: var(--color-white);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,.08);
+    border: 1px solid var(--color-gray-200);
+    transition: transform .2s, box-shadow .2s;
+}
+.catalogo-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,.12);
+}
+.catalogo-card-img    { overflow: hidden; background: var(--color-gray-50); }
+.catalogo-card-emoji  {
+    display: flex; align-items: center; justify-content: center;
+    height: 180px; font-size: 5rem;
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+}
+.catalogo-card-body   { padding: 1.25rem; }
+.catalogo-card-header {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: .5rem;
+}
+.producto-codigo {
+    font-family: monospace; font-size: .75rem; font-weight: 900;
+    background: #1e293b; color: #fff;
+    padding: 3px 8px; border-radius: 6px; letter-spacing: 1px;
+}
+.precio-tag {
+    font-size: 1rem; font-weight: 900; color: var(--color-primary);
+}
+.catalogo-card-nombre { font-size: 1.05rem; font-weight: 800; margin-bottom: .4rem; }
+.catalogo-card-desc   {
+    font-size: .82rem; color: var(--color-gray-600);
+    line-height: 1.5; margin-bottom: .75rem;
+}
+
+/* Chips de colores */
+.colores-section { margin-bottom: .75rem; }
+.colores-section label,
+.materiales-section label {
+    font-size: .75rem; font-weight: 700;
+    color: var(--color-gray-500);
+    display: block; margin-bottom: .4rem;
+    text-transform: uppercase; letter-spacing: .5px;
+}
+.color-chips { display: flex; gap: .4rem; flex-wrap: wrap; }
+.color-chip {
+    position: relative;
+    width: 28px; height: 28px; border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,.15);
+    transition: transform .15s;
+}
+.color-chip:hover { transform: scale(1.2); }
+.color-chip:hover .color-code { display: block; }
+.color-code {
+    display: none;
+    position: absolute;
+    bottom: 110%; left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b; color: #fff;
+    font-size: .65rem; font-weight: 700;
+    padding: 2px 6px; border-radius: 4px;
+    white-space: nowrap; letter-spacing: .5px;
+    font-family: monospace;
+}
+
+/* Tags de materiales */
+.materiales-tags { display: flex; gap: .3rem; flex-wrap: wrap; }
+.mat-tag {
+    font-size: .72rem; padding: 2px 8px;
+    background: var(--color-gray-100); color: var(--color-gray-700);
+    border-radius: 20px; border: 1px solid var(--color-gray-200);
+}
+
+/* CTA al final del catálogo */
+.catalogo-cta {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    border-radius: 20px; padding: 2.5rem;
+    text-align: center; color: #fff;
+    margin-top: 2rem;
+}
+.catalogo-cta h2 { font-size: 1.5rem; margin-bottom: .5rem; }
+.catalogo-cta p  { color: rgba(255,255,255,.85); margin-bottom: 1.5rem; }
+.catalogo-cta .btn-primary {
+    background: #fff; color: var(--color-primary);
+}
+.catalogo-cta .btn-primary:hover { background: #fef3c7; }
+
+/* ── Admin: upload de imagen ── */
+.img-upload-area { transition: border-color .2s, background .2s; }
+.img-upload-area:hover { background: #fff !important; }
+
+/* ── Responsive catálogo ── */
+@media (max-width: 640px) {
+    .catalogo-hero { padding: 1.5rem .75rem; border-radius: 12px; }
+    .catalogo-hero h1 { font-size: 1.5rem; }
+    .catalogo-grid { grid-template-columns: 1fr; }
+    .catalogo-cta { padding: 1.5rem 1rem; }
+}
+
+/* ========================================
+   DISEÑO MEJORADO v2.0
+   ======================================== */
+
+/* ─── Insignias mejoradas ─── */
+.insignia-card {
+    position: relative;
+    background: var(--color-white);
+    border-radius: 14px;
+    padding: 1.25rem;
+    text-align: center;
+    border: 2px solid var(--color-gray-200);
+    transition: all .25s;
+    overflow: hidden;
+}
+.insignia-card.desbloqueada {
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 20px rgba(180,83,9,.15);
+    background: linear-gradient(135deg,#fff,#fef9f0);
+}
+.insignia-card.bloqueada { opacity: .6; filter: grayscale(.4); }
+.insignia-emoji { font-size: 2.5rem; margin-bottom: .5rem; }
+.insignia-card h4 { font-size: .9rem; margin-bottom: .25rem; }
+.insignia-nivel-badge {
+    display: inline-block;
+    font-size: .65rem; font-weight: 800;
+    padding: 2px 8px; border-radius: 20px;
+    background: var(--color-primary); color: #fff;
+    margin-bottom: .25rem;
+}
+.descuento-mini {
+    display: inline-block;
+    background: #dcfce7; color: #166534;
+    font-size: .7rem; font-weight: 800;
+    padding: 2px 8px; border-radius: 20px;
+    margin-top: .25rem;
+}
+.lock-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.4);
+}
+.lock-overlay svg { width: 28px; height: 28px; color: var(--color-gray-400); }
+
+/* ─── Hero mejorado ─── */
+.hero { position: relative; overflow: hidden; }
+.hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg,rgba(180,83,9,.92),rgba(30,41,59,.88));
+    z-index: 1;
+}
+.hero-content { position: relative; z-index: 2; }
+
+/* ─── Cards mejoradas ─── */
+.card {
+    border-radius: 14px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.07);
+    transition: box-shadow .25s, transform .2s;
+}
+.card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.1); }
+
+/* ─── Product card mejorada ─── */
+.product-card { display: flex; flex-direction: column; }
+.product-card .card-body { flex: 1; }
+.product-card .product-price {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: var(--color-primary);
+    margin: .5rem 0 1rem;
+}
+
+/* ─── Catálogo con imagen ─── */
+.catalog-img {
+    width: 100%; height: 200px;
+    object-fit: cover;
+    border-radius: 14px 14px 0 0;
+    display: block;
+}
+.catalog-img-placeholder {
+    height: 200px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 4rem;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-radius: 14px 14px 0 0;
+}
+
+/* ─── Código de modelo ─── */
+.model-code {
+    display: inline-block;
+    font-family: monospace;
+    font-size: .7rem;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    background: var(--color-gray-100);
+    color: var(--color-gray-700);
+    padding: 1px 7px;
+    border-radius: 4px;
+    border: 1px solid var(--color-gray-300);
+}
+
+/* ─── Botón éxito ─── */
+.btn-success {
+    background: var(--color-success);
+    color: #fff;
+    border: 2px solid var(--color-success);
+    padding: .6rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+}
+.btn-success:hover { filter: brightness(1.1); }
+
+/* ─── Admin panel mejorado ─── */
+.admin-panel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+/* ─── Catálogo digital section ─── */
+.catalogo-digital-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--color-white);
+    border-radius: 14px;
+    box-shadow: var(--shadow-sm);
+    border-left: 5px solid var(--color-primary);
+}
+.catalogo-digital-section h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: var(--color-gray-800);
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+/* ─── Cotizador ─── */
+.cotizador-widget {
+    background: linear-gradient(135deg, #1e293b, #334155);
+    color: #fff;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-top: 1rem;
+}
+.cotizador-widget h2 { color: #fbbf24; margin-bottom: 1rem; }
+.cotizador-widget .form-label { color: #e2e8f0; }
+.cotizador-widget .form-input,
+.cotizador-widget .form-select {
+    background: rgba(255,255,255,.1);
+    border-color: rgba(255,255,255,.2);
+    color: #fff;
+}
+.cotizador-widget .form-input::placeholder { color: rgba(255,255,255,.5); }
+
+/* ─── Responsive fixes ─── */
+@media (max-width: 768px) {
+    .admin-panel-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .product-card .product-price { font-size: 1.4rem; }
+    .catalogo-digital-section { padding: 1rem; }
+}
+
+@media (max-width: 480px) {
+    .admin-panel-grid { grid-template-columns: 1fr 1fr; }
+    .auth-tabs .auth-tab { font-size: .8rem; padding: 8px 10px; }
+}

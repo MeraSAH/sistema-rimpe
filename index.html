@@ -11,6 +11,38 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/responsive.css">
     
+    <style>
+        .admin-footer-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 0.75rem;
+            padding: 7px 14px;
+            background: rgba(180, 83, 9, 0.12);
+            border: 1.5px solid rgba(180, 83, 9, 0.35);
+            border-radius: 8px;
+            color: #b45309;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .admin-footer-btn:hover {
+            background: rgba(180, 83, 9, 0.22);
+            border-color: #b45309;
+        }
+        /* atajos de teclado — indicador flotante */
+        #kb-hint {
+            position: fixed; bottom: 5.5rem; right: 1rem;
+            background: #1e293b; color: #e2e8f0;
+            font-size: 11px; padding: 5px 10px;
+            border-radius: 6px; z-index: 9999;
+            opacity: 0; transition: opacity .4s;
+            pointer-events: none;
+        }
+        #kb-hint.show { opacity: 1; }
+    </style>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -116,7 +148,7 @@
                 <div class="footer-section">
                     <h4>Contacto</h4>
                     <p><i data-lucide="phone"></i> +593 98 599 8615</p>
-                    <p><i data-lucide="mail"></i> mycbenjamin@gmail.com</p>
+                    <p><i data-lucide="mail"></i> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c1acb8a2a3a4afaba0aca8af81a6aca0a8adefa2aeac">[email&#160;protected]</a></p>
                     <p><i data-lucide="map-pin"></i> Guamaní, Quito - Ecuador</p>
                 </div>
                 
@@ -126,6 +158,10 @@
                     <a href="javascript:void(0)" onclick="navigateTo('sobre-nosotros'); return false;">Sobre Nosotros</a>
                     <a href="javascript:void(0)" onclick="navigateTo('contacto'); return false;">Contacto</a>
                     <a href="javascript:void(0)" onclick="navigateTo('perfil'); return false;">Perfil</a>
+                    <a href="javascript:void(0)" onclick="navigateTo('admin-login'); return false;"
+                       class="admin-footer-btn">
+                       🔐 Acceso Administrador
+                    </a>
                 </div>
                 
                 <div class="footer-section">
@@ -145,17 +181,28 @@
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2024 Mueblería y Cerrajería "Benjamín". Todos los derechos reservados.</p>
+                <p>&copy; <span id="footer-year"></span> Mueblería y Cerrajería "Benjamín". Todos los derechos reservados.</p>
+                <script>
+                    document.getElementById('footer-year').textContent =
+                        Math.max(2026, new Date().getFullYear());
+                </script>
             </div>
         </div>
     </footer>
+
+    <!-- Indicador atajo teclado (oculto por defecto) -->
+    <div id="kb-hint">🔐 Ctrl+Shift+A → Admin</div>
 
     <!-- Botón flotante WhatsApp -->
     <a href="https://wa.me/593985998615" target="_blank" rel="noopener noreferrer" class="whatsapp-float" aria-label="Contactar por WhatsApp">
         <i data-lucide="message-circle"></i>
     </a>
 
+    <!-- Supabase SDK -->
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <!-- Scripts -->
+    <script src="js/supabase.js"></script>
     <script src="js/data.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/admin.js"></script>
