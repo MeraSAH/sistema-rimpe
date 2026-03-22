@@ -43,6 +43,24 @@
         }
         #kb-hint.show { opacity: 1; }
     </style>
+    <style>
+        /* ── Ajuste de escala para 100% de zoom ────────────────── */
+        .nav-desktop { gap: 0.6rem; font-size: 0.875rem; }
+        .nav-desktop a { padding: 0.4rem 0.6rem; font-size: 0.8rem; }
+        .logo-text h1 { font-size: 1.25rem; }
+        .logo-text p  { font-size: 0.65rem; }
+        .logo-icon    { width: 42px; height: 42px; font-size: 1.6rem; }
+        .btn-cart     { padding: 0.4rem 0.75rem !important; }
+        .btn-perfil   { padding: 0.4rem 0.75rem; }
+        @media (max-width: 1200px) {
+            .nav-desktop { gap: 0.4rem; }
+            .nav-desktop a { padding: 0.35rem 0.5rem; font-size: 0.78rem; }
+        }
+        @media (max-width: 1024px) {
+            .nav-desktop { display: none; }
+            .menu-toggle { display: block; }
+        }
+    </style>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -148,7 +166,8 @@
                 <div class="footer-section">
                     <h4>Contacto</h4>
                     <p><i data-lucide="phone"></i> +593 98 599 8615</p>
-                    <p><i data-lucide="mail"></i> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c1acb8a2a3a4afaba0aca8af81a6aca0a8adefa2aeac">[email&#160;protected]</a></p>
+                    <p><i data-lucide="mail"></i> <span id="footer-email"></span></p>
+                    <script>(function(){var u='mycbenjamin',d='gmail.com';var el=document.getElementById('footer-email');if(el){var a=document.createElement('a');a.href='mailto:'+u+'@'+d;a.textContent=u+'@'+d;el.appendChild(a);}})();</script>
                     <p><i data-lucide="map-pin"></i> Guamaní, Quito - Ecuador</p>
                 </div>
                 
@@ -176,6 +195,16 @@
                         <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
                             <i data-lucide="youtube"></i>
                         </a>
+                        <a href="https://tiktok.com/@mycbenjamin" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+                            <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor">
+                                <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.77a4.85 4.85 0 01-1.01-.08z"/>
+                            </svg>
+                        </a>
+                        <a href="https://twitter.com/mycbenjamin" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)">
+                            <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -199,9 +228,10 @@
     </a>
 
     <!-- Supabase SDK -->
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <!-- Scripts -->
+    <script src="js/images.js"></script>
     <script src="js/supabase.js"></script>
     <script src="js/data.js"></script>
     <script src="js/storage.js"></script>

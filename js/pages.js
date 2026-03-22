@@ -1789,17 +1789,82 @@ function confirmarEliminarProducto(categoria, id, nombre) {
 // ========================================
 // GESTIÓN DE CLIENTES
 // ========================================
+// ── Papelera de clientes — soft delete 30 días ───────────────────────────────
+function getClientesEliminados() {
+    return JSON.parse(localStorage.getItem('clientesEliminados') || '[]');
+}
+function moverClienteAPapelera(cedula) {
+    const clientes  = getClientesList();
+    const eliminados = getClientesEliminados();
+    const cliente = clientes.find(c => c.cedula === cedula);
+    if (!cliente) return;
+    eliminados.push({
+        ...cliente,
+        eliminadoEn: new Date().toISOString(),
+        expiraEn: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    });
+    localStorage.setItem('clientesEliminados', JSON.stringify(eliminados));
+    // Ocultar notas del cliente de la vista (no borrar notas reales)
+    const ocultos = JSON.parse(localStorage.getItem('clientesOcultos') || '[]');
+    if (!ocultos.includes(cedula)) ocultos.push(cedula);
+    localStorage.setItem('clientesOcultos', JSON.stringify(ocultos));
+}
+function restaurarClienteDePapelera(cedula) {
+    const eliminados = getClientesEliminados().filter(c => c.cedula !== cedula);
+    localStorage.setItem('clientesEliminados', JSON.stringify(eliminados));
+    const ocultos = JSON.parse(localStorage.getItem('clientesOcultos') || '[]').filter(c => c !== cedula);
+    localStorage.setItem('clientesOcultos', JSON.stringify(ocultos));
+}
+function limpiarPapeleraExpirada() {
+    const ahora = new Date();
+    const vigentes = getClientesEliminados().filter(c => new Date(c.expiraEn) > ahora);
+    localStorage.setItem('clientesEliminados', JSON.stringify(vigentes));
+}
+function getClistesList_sinOcultos() {
+    const ocultos = JSON.parse(localStorage.getItem('clientesOcultos') || '[]');
+    return getClientesList().filter(c => !ocultos.includes(c.cedula));
+}
+function diasRestantes(expiraEn) {
+    return Math.max(0, Math.ceil((new Date(expiraEn) - new Date()) / (1000*60*60*24)));
+}
+
+// ── Helpers de insignias por cédula (override manual del admin) ──────────────
+function getInsigniasOverrides() {
+    return JSON.parse(localStorage.getItem('insigniasOverrides') || '{}');
+}
+function setInsigniaOverride(cedula, data) {
+    const ov = getInsigniasOverrides();
+    ov[cedula] = data;
+    localStorage.setItem('insigniasOverrides', JSON.stringify(ov));
+}
+function getInsigniaCliente(cedula, notasCount) {
+    const ov = getInsigniasOverrides();
+    if (ov[cedula]) return { ...ov[cedula], esManual: true };
+    // Auto: basada en número de notas pagadas como proxy de compras
+    let mejor = insignias[0];
+    for (const ins of insignias) {
+        if (notasCount >= (ins.comprasMin || 0)) mejor = ins;
+    }
+    return { ...mejor, esManual: false };
+}
+
 function renderAdminClientes() {
     if (!isAdminAuthenticated()) { navigateTo('admin-login'); return ''; }
-    const clientes = getClientesList();
+    limpiarPapeleraExpirada();
+    const clientes = getClistesList_sinOcultos();
+    const eliminados = getClientesEliminados();
     return `
     <div class="fade-in">
         <div class="admin-header">
             <div>
                 <h1>👥 Gestión de Clientes</h1>
-                <p>${clientes.length} clientes registrados (extraídos de notas de venta)</p>
+                <p>${clientes.length} clientes activos${eliminados.length > 0 ? ' · '+eliminados.length+' en papelera' : ''}</p>
             </div>
-            <button onclick="navigateTo('admin-panel')" class="btn btn-secondary">
+            <div class="flex gap-2">
+                <button onclick="navigateTo('admin-papelera-clientes')" class="btn btn-secondary btn-sm">
+                    <i data-lucide="trash-2"></i> Papelera (${eliminados.length})
+                </button>
+                <button onclick="navigateTo('admin-panel')" class="btn btn-secondary">
                 <i data-lucide="arrow-left"></i> Panel
             </button>
         </div>
@@ -1807,29 +1872,57 @@ function renderAdminClientes() {
         ${clientes.length === 0 ? `
         <div class="alert alert-warning">
             <i data-lucide="users"></i>
-            <p>No hay clientes registrados. Los clientes aparecen automáticamente al emitir notas de venta.</p>
+            <p>No hay clientes aún. Los clientes aparecen al emitir notas de venta.</p>
         </div>` : `
         <div class="table-responsive">
             <table class="admin-table">
                 <thead><tr>
                     <th>Cliente</th><th>Cédula</th><th>Teléfono</th>
-                    <th>Notas</th><th>Total Facturado</th><th>Última Compra</th><th>Detalle</th>
+                    <th>Compras</th><th>Facturado</th>
+                    <th>Insignia</th><th>Acciones</th>
                 </tr></thead>
                 <tbody>
-                    ${clientes.map(c => `
-                    <tr>
-                        <td><strong>${c.nombre}</strong></td>
-                        <td>${c.cedula}</td>
-                        <td>${c.telefono||'—'}</td>
-                        <td><span class="badge badge-pagada">${c.notas.length}</span></td>
-                        <td style="color:var(--color-success);font-weight:700">
-                            $${c.totalFacturado.toFixed(2)}</td>
-                        <td>${c.notas.length ? new Date(c.notas[c.notas.length-1].fecha).toLocaleDateString('es-EC') : '—'}</td>
-                        <td>
-                            <button onclick="verDetalleCliente('${c.cedula}')" class="btn-icon" title="Ver historial">
-                                <i data-lucide="eye"></i></button>
-                        </td>
-                    </tr>`).join('')}
+                    ${clientes.map(c => {
+                        const notasPagadas = c.notas.filter(n => n.estado === 'pagada').length;
+                        const ins = getInsigniaCliente(c.cedula, notasPagadas);
+                        return `
+                        <tr>
+                            <td><strong>${c.nombre}</strong></td>
+                            <td style="font-size:.8rem">${c.cedula}</td>
+                            <td>${c.telefono||'—'}</td>
+                            <td>
+                                <span class="badge badge-pagada">${notasPagadas}</span>
+                                <span style="font-size:.7rem;color:var(--color-gray-500)"> / ${c.notas.length} total</span>
+                            </td>
+                            <td style="color:var(--color-success);font-weight:700">
+                                $${c.totalFacturado.toFixed(2)}</td>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:.4rem">
+                                    <span style="font-size:1.2rem">${ins.icono}</span>
+                                    <div>
+                                        <div style="font-size:.8rem;font-weight:700">${ins.nombre}</div>
+                                        <div style="font-size:.7rem;color:var(--color-gray-500)">
+                                            ${ins.esManual ? '✏️ Manual' : '⚙️ Auto'}
+                                            ${ins.descuento > 0 ? '· '+ins.descuento+'% dto' : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="flex gap-1">
+                                    <button onclick="abrirModalInsignia('${c.cedula}','${c.nombre}',${notasPagadas})"
+                                        class="btn-icon" title="Asignar insignia" style="color:var(--color-primary)">
+                                        <i data-lucide="award"></i></button>
+                                    <button onclick="verDetalleCliente('${c.cedula}')"
+                                        class="btn-icon" title="Ver historial">
+                                        <i data-lucide="eye"></i></button>
+                                    <button onclick="confirmarEliminarCliente('${c.cedula}','${c.nombre}')"
+                                        class="btn-icon" title="Mover a papelera" style="color:var(--color-error)">
+                                        <i data-lucide="trash-2"></i></button>
+                                </div>
+                            </td>
+                        </tr>`;
+                    }).join('')}
                 </tbody>
             </table>
         </div>
@@ -1844,6 +1937,18 @@ function renderAdminClientes() {
                 </div>
                 <div class="modal-body" id="modalClienteBody"></div>
             </div>
+        </div>
+
+        <!-- Modal asignación de insignia -->
+        <div id="modalInsignia" class="modal-overlay hidden">
+            <div class="modal-content" style="max-width:520px">
+                <div class="modal-header">
+                    <h2>🏅 Asignar Insignia</h2>
+                    <button class="btn-close" onclick="document.getElementById('modalInsignia').classList.add('hidden')">
+                        <i data-lucide="x"></i></button>
+                </div>
+                <div class="modal-body" id="modalInsigniaBody"></div>
+            </div>
         </div>`}
     </div>`;
 }
@@ -1852,6 +1957,12 @@ function verDetalleCliente(cedula) {
     const clientes = getClientesList();
     const c = clientes.find(x => x.cedula === cedula);
     if (!c) return;
+    const notasPagadas = c.notas.filter(n => n.estado === 'pagada').length;
+    const ins = getInsigniaCliente(c.cedula, notasPagadas);
+    // Calcular próxima insignia
+    const idx = insignias.findIndex(i => i.id === ins.id);
+    const proxima = idx < insignias.length - 1 ? insignias[idx + 1] : null;
+
     document.getElementById('modalClienteTitulo').textContent = c.nombre;
     document.getElementById('modalClienteBody').innerHTML = `
     <div class="cliente-detalle-header">
@@ -1862,12 +1973,39 @@ function verDetalleCliente(cedula) {
             <p><strong>Dirección:</strong> ${c.direccion||'—'}</p>
         </div>
         <div class="cliente-stats-grid">
-            <div class="stat-box"><span class="stat-number">${c.notas.length}</span><span class="stat-label">Notas</span></div>
+            <div class="stat-box"><span class="stat-number">${notasPagadas}</span><span class="stat-label">Compras</span></div>
             <div class="stat-box"><span class="stat-number">$${c.totalFacturado.toFixed(2)}</span><span class="stat-label">Facturado</span></div>
         </div>
     </div>
-    <h4 class="mb-2 mt-3">Notas de Venta</h4>
-    <div style="max-height:350px;overflow-y:auto">
+
+    <!-- Insignia actual -->
+    <div style="background:linear-gradient(135deg,#fef9c3,#fef3c7);border:2px solid #f59e0b;
+        border-radius:12px;padding:1rem;margin:1rem 0;display:flex;align-items:center;gap:1rem">
+        <span style="font-size:2.5rem">${ins.icono}</span>
+        <div style="flex:1">
+            <div style="font-weight:900;font-size:1rem">${ins.nombre}
+                <span style="font-size:.7rem;background:${ins.esManual?'#dbeafe':'#dcfce7'};
+                    color:${ins.esManual?'#1d4ed8':'#166534'};padding:2px 8px;border-radius:20px;margin-left:.5rem">
+                    ${ins.esManual ? '✏️ Asignada manualmente' : '⚙️ Automática'}
+                </span>
+            </div>
+            <div style="font-size:.8rem;color:#92400e;margin:.2rem 0">Nivel: ${ins.nivel}</div>
+            <div style="font-size:.8rem;color:#374151">
+                ${ins.descuento > 0 ? '🎉 '+ins.descuento+'% de descuento activo' : 'Sin descuento en este nivel'}
+            </div>
+            ${proxima ? `<div style="font-size:.75rem;color:var(--color-gray-500);margin-top:.25rem">
+                Próxima: ${proxima.icono} ${proxima.nombre} — requiere ${proxima.comprasMin} compras
+                (${Math.max(0, proxima.comprasMin - notasPagadas)} más)
+            </div>` : '<div style="font-size:.75rem;color:#10b981;margin-top:.25rem">🏆 ¡Nivel máximo alcanzado!</div>'}
+        </div>
+        <button onclick="abrirModalInsignia('${c.cedula}','${c.nombre}',${notasPagadas})"
+            class="btn btn-primary btn-sm">
+            <i data-lucide="edit-2"></i> Cambiar
+        </button>
+    </div>
+
+    <h4 class="mb-2">Historial de Notas</h4>
+    <div style="max-height:300px;overflow-y:auto">
         <table class="admin-table">
             <thead><tr><th>No. Nota</th><th>Fecha</th><th>Total</th><th>Estado</th><th>PDF</th></tr></thead>
             <tbody>
@@ -1877,13 +2015,210 @@ function verDetalleCliente(cedula) {
                     <td>${n.fechaEmision}</td>
                     <td>$${n.total.toFixed(2)}</td>
                     <td><span class="badge badge-${n.estado}">${estadosNota[n.estado]?.nombre||n.estado}</span></td>
-                    <td><button onclick="verDetalleNota(${n.id})" class="btn-icon"><i data-lucide="printer"></i></button></td>
+                    <td><button onclick="verDetalleNota(${n.id})" class="btn-icon">
+                        <i data-lucide="printer"></i></button></td>
                 </tr>`).join('')}
             </tbody>
         </table>
     </div>`;
     document.getElementById('modalCliente').classList.remove('hidden');
     lucide.createIcons();
+}
+
+
+// ── Modal de asignación de insignia ──────────────────────────────────────────
+function abrirModalInsignia(cedula, nombre, compras) {
+    const ins_actual = getInsigniaCliente(cedula, compras);
+    const niveles = ['Simple', 'Premium', 'Elite'];
+
+    document.getElementById('modalInsigniaBody').innerHTML = `
+    <div style="margin-bottom:1rem;padding:.75rem;background:var(--color-gray-50);border-radius:8px">
+        <p style="font-weight:700">${nombre}</p>
+        <p style="font-size:.85rem;color:var(--color-gray-600)">
+            Cédula: ${cedula} · ${compras} compras pagadas</p>
+        <p style="font-size:.85rem;margin-top:.25rem">
+            Insignia actual: <strong>${ins_actual.icono} ${ins_actual.nombre}</strong>
+            <span style="font-size:.7rem;background:${ins_actual.esManual?'#dbeafe':'#dcfce7'};
+                color:${ins_actual.esManual?'#1d4ed8':'#166534'};padding:2px 8px;border-radius:20px;margin-left:.4rem">
+                ${ins_actual.esManual ? '✏️ Manual' : '⚙️ Auto'}
+            </span>
+        </p>
+    </div>
+
+    <p style="font-weight:700;margin-bottom:.75rem">Selecciona la insignia a asignar:</p>
+
+    ${niveles.map(nivel => `
+    <div style="margin-bottom:.75rem">
+        <div style="font-size:.75rem;font-weight:700;color:var(--color-gray-500);
+            text-transform:uppercase;letter-spacing:1px;margin-bottom:.4rem">
+            — ${nivel} —
+        </div>
+        <div style="display:grid;gap:.4rem">
+            ${insignias.filter(i => i.nivel === nivel).map(ins => {
+                const esActual = ins.id === ins_actual.id;
+                const cumple   = compras >= (ins.comprasMin || 0);
+                return `
+                <button onclick="asignarInsignia('${cedula}', '${ins.id}')"
+                    style="display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;
+                        border-radius:8px;border:2px solid ${esActual ? '#f59e0b' : '#e5e7eb'};
+                        background:${esActual ? '#fef9c3' : 'var(--color-white)'};
+                        cursor:pointer;text-align:left;width:100%;
+                        transition:all .15s">
+                    <span style="font-size:1.4rem">${ins.icono}</span>
+                    <div style="flex:1">
+                        <div style="font-weight:700;font-size:.875rem">
+                            ${ins.nombre}
+                            ${esActual ? '<span style="font-size:.7rem;color:#92400e"> ← actual</span>' : ''}
+                        </div>
+                        <div style="font-size:.75rem;color:var(--color-gray-500)">
+                            ${ins.comprasMin} compras mín.
+                            ${ins.descuento > 0 ? '· '+ins.descuento+'% descuento' : ''}
+                            ${!cumple ? ' · <span style="color:#f59e0b">⚠️ No cumple aún</span>' : ' · ✅ Cumple'}
+                        </div>
+                    </div>
+                </button>`;
+            }).join('')}
+        </div>
+    </div>`).join('')}
+
+    <hr style="margin:1rem 0;border-color:var(--color-gray-200)">
+    <div class="flex gap-2">
+        ${ins_actual.esManual ? `
+        <button onclick="quitarInsigniaManual('${cedula}')"
+            class="btn btn-secondary btn-sm">
+            <i data-lucide="rotate-ccw"></i> Restaurar automática
+        </button>` : ''}
+        <button onclick="document.getElementById('modalInsignia').classList.add('hidden')"
+            class="btn btn-secondary btn-sm" style="margin-left:auto">
+            Cerrar
+        </button>
+    </div>`;
+
+    document.getElementById('modalInsignia').classList.remove('hidden');
+    lucide.createIcons();
+}
+
+function asignarInsignia(cedula, insigniaId) {
+    const ins = insignias.find(i => i.id === insigniaId);
+    if (!ins) return;
+    setInsigniaOverride(cedula, {
+        id:        ins.id,
+        nombre:    ins.nombre,
+        icono:     ins.icono,
+        nivel:     ins.nivel,
+        descuento: ins.descuento,
+        beneficios:ins.beneficios,
+        asignadaEn: new Date().toISOString()
+    });
+    document.getElementById('modalInsignia').classList.add('hidden');
+    showNotification(`✅ Insignia "${ins.icono} ${ins.nombre}" asignada correctamente`, 'success');
+    navigateTo('admin-clientes');
+}
+
+function quitarInsigniaManual(cedula) {
+    const ov = getInsigniasOverrides();
+    delete ov[cedula];
+    localStorage.setItem('insigniasOverrides', JSON.stringify(ov));
+    document.getElementById('modalInsignia').classList.add('hidden');
+    showNotification('↩️ Insignia restaurada al modo automático', 'info');
+    navigateTo('admin-clientes');
+}
+
+
+// ── Eliminar cliente (papelera) ───────────────────────────────────────────────
+function confirmarEliminarCliente(cedula, nombre) {
+    if (!confirm(`¿Mover a "${nombre}" a la papelera?\n\nEl cliente desaparecerá de la lista.\nSus notas de venta NO se eliminan.\nPodrás restaurarlo en los próximos 30 días desde la Papelera.`)) return;
+    moverClienteAPapelera(cedula);
+    showNotification(`🗑️ ${nombre} movido a la papelera (30 días para restaurar)`, 'info');
+    navigateTo('admin-clientes');
+}
+
+// ── Papelera de clientes ──────────────────────────────────────────────────────
+function renderAdminPapeleraClientes() {
+    if (!isAdminAuthenticated()) { navigateTo('admin-login'); return ''; }
+    limpiarPapeleraExpirada();
+    const eliminados = getClientesEliminados();
+    return `
+    <div class="fade-in">
+        <div class="admin-header">
+            <div>
+                <h1>🗑️ Papelera de Clientes</h1>
+                <p>Los clientes se eliminan definitivamente después de 30 días</p>
+            </div>
+            <button onclick="navigateTo('admin-clientes')" class="btn btn-secondary">
+                <i data-lucide="arrow-left"></i> Volver
+            </button>
+        </div>
+
+        ${eliminados.length === 0 ? `
+        <div class="alert alert-success">
+            <i data-lucide="check-circle"></i>
+            <p>La papelera está vacía.</p>
+        </div>` : `
+        <div class="table-responsive">
+            <table class="admin-table">
+                <thead><tr>
+                    <th>Cliente</th><th>Cédula</th>
+                    <th>Eliminado</th><th>Expira en</th><th>Acciones</th>
+                </tr></thead>
+                <tbody>
+                    ${eliminados.map(c => `
+                    <tr style="opacity:.75">
+                        <td>
+                            <strong>${c.nombre}</strong><br>
+                            <span style="font-size:.75rem;color:var(--color-gray-500)">${c.email||c.telefono||''}</span>
+                        </td>
+                        <td>${c.cedula}</td>
+                        <td style="font-size:.8rem">${new Date(c.eliminadoEn).toLocaleDateString('es-EC')}</td>
+                        <td>
+                            <span style="color:${diasRestantes(c.expiraEn) <= 5 ? 'var(--color-error)' : 'var(--color-warning)'}">
+                                ${diasRestantes(c.expiraEn)} días
+                            </span>
+                        </td>
+                        <td>
+                            <div class="flex gap-1">
+                                <button onclick="restaurarCliente('${c.cedula}')"
+                                    class="btn btn-success btn-sm" title="Restaurar">
+                                    <i data-lucide="rotate-ccw"></i> Restaurar
+                                </button>
+                                <button onclick="eliminarDefinitivo('${c.cedula}','${c.nombre}')"
+                                    class="btn btn-danger btn-sm" title="Eliminar definitivo">
+                                    <i data-lucide="x"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="alert alert-warning mt-3">
+            <i data-lucide="alert-triangle"></i>
+            <p><strong>Nota:</strong> Eliminar definitivamente solo oculta al cliente de la lista.
+            Sus notas de venta y datos fiscales se conservan para cumplimiento RIMPE.</p>
+        </div>`}
+    </div>`;
+}
+
+function restaurarCliente(cedula) {
+    restaurarClienteDePapelera(cedula);
+    showNotification('✅ Cliente restaurado correctamente', 'success');
+    navigateTo('admin-papelera-clientes');
+}
+
+function eliminarDefinitivo(cedula, nombre) {
+    if (!confirm(`⚠️ ¿Eliminar definitivamente a "${nombre}"?\n\nEsta acción NO se puede deshacer.`)) return;
+    restaurarClienteDePapelera(cedula); // quitar de papelera
+    // Añadir a lista negra permanente
+    const negra = JSON.parse(localStorage.getItem('clientesOcultosPerm') || '[]');
+    if (!negra.includes(cedula)) negra.push(cedula);
+    localStorage.setItem('clientesOcultosPerm', JSON.stringify(negra));
+    // Actualizar lista de ocultos
+    const ocultos = JSON.parse(localStorage.getItem('clientesOcultos') || '[]');
+    if (!ocultos.includes(cedula)) ocultos.push(cedula);
+    localStorage.setItem('clientesOcultos', JSON.stringify(ocultos));
+    showNotification('🗑️ Cliente eliminado definitivamente', 'info');
+    navigateTo('admin-papelera-clientes');
 }
 
 // ========================================

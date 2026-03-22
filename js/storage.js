@@ -152,27 +152,30 @@ function updatePedidoEstado(pedidoId, nuevoEstado) {
 // ========================================
 
 // Calcular insignia actual del usuario
+// Respeta override manual del administrador
 function calcularInsigniaActual() {
     const user = getUser();
     if (!user) return null;
 
+    // 1. Verificar si el admin asignó una insignia manualmente
+    const overrides = JSON.parse(localStorage.getItem('insigniasOverrides') || '{}');
+    const cedula = user.cedula || user.email; // intentar por cédula, fallback por email
+    if (overrides[cedula]) return { ...overrides[cedula], esManual: true };
+
+    // 2. Buscar por email como clave alternativa
+    const porEmail = Object.entries(overrides).find(([k, v]) => k === user.email);
+    if (porEmail) return { ...porEmail[1], esManual: true };
+
+    // 3. Cálculo automático por compras
     const compras = user.compras || 0;
-    
-    // Buscar la insignia más alta que el usuario ha desbloqueado
-    let insigniaActual = null;
-    
+    let insigniaActual = insignias[0];
     for (let i = insignias.length - 1; i >= 0; i--) {
-        const insignia = insignias[i];
-        
-        // Verificar si cumple con el requisito de compras
-        if (insignia.comprasMin && compras >= insignia.comprasMin) {
-            insigniaActual = insignia;
+        if ((insignias[i].comprasMin || 0) <= compras) {
+            insigniaActual = insignias[i];
             break;
         }
     }
-    
-    // Si no tiene ninguna insignia, devolver la primera (Bronce)
-    return insigniaActual || insignias[0];
+    return insigniaActual;
 }
 
 // Obtener descuento actual
