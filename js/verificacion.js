@@ -421,6 +421,20 @@ function ejecutarPasoD() {
 }
 
 // ── Paso B — Escaneo QR ──────────────────────────────────────
+// Funciones globales — usadas desde botones en innerHTML
+function abrirRegistroCivil() {
+    const url = window._urlRegistroCivil;
+    if (url) {
+        window.open(url, '_blank');
+    } else {
+        showNotification('URL no disponible. Intenta de nuevo.', 'error');
+    }
+}
+
+function irAlPerfil() {
+    if (typeof navigateTo === 'function') navigateTo('perfil');
+}
+
 async function ejecutarPasoB() {
     const file   = document.getElementById('qrFile')?.files[0];
     const user   = getUser();
@@ -447,42 +461,42 @@ async function ejecutarPasoB() {
         if (qrResult.ok) {
             if (badge) { badge.className = 'verif-badge verif-ok'; badge.textContent = '✅ QR Leído'; }
 
+            // Guardar PRIMERO antes de cualquier render
+            setVerificacion('verificado',
+                qrResult.tipo === 'url_registro_civil'
+                    ? 'QR Registro Civil Ecuador'
+                    : 'QR de cédula (texto directo)',
+                { cedulaVerificada: cedula, urlQR: qrResult.urlQR || '' }
+            );
+
             if (qrResult.tipo === 'url_registro_civil') {
-                // El QR contiene URL oficial — abrir para que el cliente confirme sus datos
-                if (result) result.innerHTML = `
-                <div style="background:#dcfce7;border-radius:8px;padding:.75rem;margin-top:.5rem">
-                    <div style="color:#166534;font-weight:700;margin-bottom:.5rem">
-                        ✅ QR oficial del Registro Civil detectado
-                    </div>
-                    <p style="font-size:.8rem;color:#166534;margin-bottom:.75rem">
-                        Se abrirá el sitio del Registro Civil para que confirmes que tus datos son correctos.
-                        El admin también puede verificar desde ese enlace.
-                    </p>
-                    <button onclick="window.open('${qrResult.urlQR}','_blank')"
-                        class="btn btn-success btn-sm">
-                        🌐 Ver mis datos en el Registro Civil
-                    </button>
-                </div>`;
-                // Guardar como verificado — el QR es del gobierno oficial
-                setVerificacion('verificado', 'QR Registro Civil Ecuador', {
-                    cedulaVerificada: cedula,
-                    urlQR: qrResult.urlQR
-                });
-                setTimeout(() => {
-                    const main = document.getElementById('mainContent');
-                    if (main) { main.innerHTML = renderVerificacionIdentidad(); lucide.createIcons(); }
-                }, 2500);
-                showNotification('🎉 ¡QR del Registro Civil verificado!', 'success');
+                // Guardar URL para abrirla desde función global (evita problemas con == en HTML)
+                window._urlRegistroCivil = qrResult.urlQR;
+
+                if (result) result.innerHTML =
+                    '<div style="background:#dcfce7;border-radius:8px;padding:1rem;margin-top:.5rem">' +
+                    '<div style="color:#166534;font-weight:700;font-size:1rem;margin-bottom:.5rem">' +
+                    '🎉 ¡Identidad verificada con el Registro Civil!</div>' +
+                    '<p style="font-size:.85rem;color:#166534;margin-bottom:.75rem">' +
+                    'Tu cédula fue verificada correctamente usando el QR oficial del gobierno.</p>' +
+                    '<button onclick="abrirRegistroCivil()" ' +
+                    'style="padding:8px 16px;background:#10b981;color:#fff;border:none;' +
+                    'border-radius:8px;font-weight:700;cursor:pointer;margin-bottom:.5rem">' +
+                    '🌐 Ver mis datos en el Registro Civil</button>' +
+                    '<br><button onclick="irAlPerfil()" ' +
+                    'style="padding:8px 16px;background:#1e3a5f;color:#fff;border:none;' +
+                    'border-radius:8px;font-weight:700;cursor:pointer">' +
+                    '✅ Ir a mi perfil</button>' +
+                    '</div>';
+                showNotification('🎉 ¡Identidad verificada exitosamente!', 'success');
+                // Navegar al perfil después de 3 segundos
+                setTimeout(() => { if (typeof navigateTo === 'function') navigateTo('perfil'); }, 3000);
             } else {
-                // Texto plano (formato antiguo)
-                if (result) result.innerHTML = `<div style="color:var(--color-success);font-size:.875rem">
-                    ✅ Cédula verificada correctamente</div>`;
-                setVerificacion('verificado', 'QR de cédula (texto directo)', { cedulaVerificada: cedula });
-                setTimeout(() => {
-                    const main = document.getElementById('mainContent');
-                    if (main) { main.innerHTML = renderVerificacionIdentidad(); lucide.createIcons(); }
-                }, 1200);
+                if (result) result.innerHTML =
+                    '<div style="color:var(--color-success);font-size:.875rem;font-weight:700">' +
+                    '✅ Cédula verificada correctamente</div>';
                 showNotification('🎉 ¡Identidad verificada!', 'success');
+                setTimeout(() => { if (typeof navigateTo === 'function') navigateTo('perfil'); }, 1500);
             }
         } else {
             if (badge) { badge.className = 'verif-badge verif-error'; badge.textContent = '❌ Error'; }
