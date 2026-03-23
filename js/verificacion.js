@@ -62,65 +62,100 @@ function validarCedulaEC(cedula) {
 // Usa jsQR (CDN). El QR contiene datos separados por & o |
 // Formato típico: APELLIDO&NOMBRE&CEDULA&...
 // ============================================================
+// ── IMPORTANTE: El QR de la cédula ecuatoriana actual contiene ──
+// una URL del Registro Civil: https://qr.registrocivil.gob.ec/qr?p=...
+// NO contiene nombre/cédula en texto. La verificación se hace
+// confirmando que la URL pertenece al dominio oficial del gobierno.
+
 async function escanearQRCedula(file, cedulaEsperada, nombreEsperado) {
     return new Promise((resolve) => {
         if (typeof jsQR === 'undefined') {
-            resolve({ ok: false, error: 'Librería QR no cargada. Intenta recargar la página.' });
+            resolve({ ok: false, error: 'Librería QR no cargada. Recarga la página e intenta de nuevo.' });
             return;
         }
         const reader = new FileReader();
         reader.onload = (e) => {
             const img = new Image();
             img.onload = () => {
+                // Escalar si es muy grande — mejora detección
+                const MAX = 1400;
+                let w = img.width, h = img.height;
+                if (w > MAX || h > MAX) {
+                    const r = Math.min(MAX/w, MAX/h);
+                    w = Math.round(w*r); h = Math.round(h*r);
+                }
                 const canvas = document.createElement('canvas');
-                canvas.width  = img.width;
-                canvas.height = img.height;
+                canvas.width = w; canvas.height = h;
                 const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                    inversionAttempts: 'dontInvert'
-                });
+                ctx.drawImage(img, 0, 0, w, h);
+                const imageData = ctx.getImageData(0, 0, w, h);
+
+                // Intentar leer con ambas inversiones
+                const code = jsQR(imageData.data, w, h, { inversionAttempts: 'attemptBoth' });
+
                 if (!code) {
-                    resolve({ ok: false, error: 'No se detectó ningún código QR en la imagen. Asegúrate de que el QR esté bien enfocado y visible.' });
-                    return;
-                }
-                // Parsear el contenido del QR
-                const contenido = code.data;
-                const partes    = contenido.split(/[&|;,\t]/);
-
-                // Buscar cédula en el QR
-                const cedulaEnQR = partes.find(p => /^\d{10}$/.test(p.trim()));
-                if (!cedulaEnQR) {
-                    resolve({ ok: false, error: 'El QR no contiene un número de cédula reconocible. Verifica que sea la cédula ecuatoriana.', contenidoQR: contenido });
+                    resolve({
+                        ok: false,
+                        error: 'No se pudo leer el QR.\n\nConsejos:\n• Fotografía SOLO el código QR (cuadrado con puntos)\n• Sin flash, sin reflejos\n• Imagen nítida y sin blur\n• Mínimo 500×500 píxeles'
+                    });
                     return;
                 }
 
-                // Verificar que la cédula del QR coincide con la ingresada
-                if (cedulaEnQR.trim() !== cedulaEsperada.trim()) {
-                    resolve({ ok: false, error: `La cédula del QR (${cedulaEnQR}) no coincide con la que ingresaste (${cedulaEsperada}).`, contenidoQR: contenido });
+                const contenido = code.data.trim();
+
+                // ── Caso A: URL del Registro Civil (cédulas modernas) ──
+                const DOMINIOS_OFICIALES = [
+                    'qr.registrocivil.gob.ec',
+                    'registrocivil.gob.ec'
+                ];
+                if (contenido.startsWith('http')) {
+                    try {
+                        const urlObj = new URL(contenido);
+                        const esOficial = DOMINIOS_OFICIALES.some(d =>
+                            urlObj.hostname === d || urlObj.hostname.endsWith('.' + d)
+                        );
+                        if (esOficial) {
+                            resolve({
+                                ok:          true,
+                                tipo:        'url_registro_civil',
+                                urlQR:       contenido,
+                                contenidoQR: contenido,
+                                mensaje:     'URL oficial del Registro Civil detectada'
+                            });
+                            return;
+                        }
+                        // URL pero no del Registro Civil
+                        resolve({
+                            ok: false,
+                            error: `El QR contiene una URL pero no del Registro Civil:\n${contenido.substring(0, 80)}\n\nAsegúrate de fotografiar el QR que está al reverso de tu cédula.`
+                        });
+                        return;
+                    } catch(_) { /* continuar */ }
+                }
+
+                // ── Caso B: Datos en texto plano (cédulas antiguas) ──
+                const partes      = contenido.split(/[&|;,\t\n]/);
+                const cedulaTexto = partes.find(p => /^\d{10}$/.test(p.trim()));
+                if (cedulaTexto) {
+                    if (cedulaTexto.trim() === (cedulaEsperada||'').trim()) {
+                        resolve({ ok: true, tipo: 'texto_directo', cedulaQR: cedulaTexto, contenidoQR: contenido });
+                    } else {
+                        resolve({ ok: false, error: `La cédula del QR (${cedulaTexto}) no coincide con la registrada (${cedulaEsperada}).` });
+                    }
                     return;
                 }
 
-                // Extraer nombre del QR para validación adicional
-                const nombresQR = partes.filter(p => p.length > 2 && !/^\d+$/.test(p)).map(p => p.trim().toUpperCase());
-                const nombreNorm = (nombreEsperado || '').toUpperCase().replace(/\s+/g,' ').trim();
-                const nombreEnQR = nombresQR.join(' ');
-
-                // Verificación parcial del nombre (al menos una palabra del nombre debe estar en el QR)
-                const palabrasNombre = nombreNorm.split(' ').filter(p => p.length > 2);
-                const coincideNombre = palabrasNombre.some(p => nombreEnQR.includes(p));
-
-                if (!coincideNombre && palabrasNombre.length > 0) {
-                    resolve({ ok: false, error: `El nombre en el QR (${nombreEnQR}) no coincide con el nombre registrado (${nombreNorm}).`, contenidoQR: contenido });
-                    return;
-                }
-
-                resolve({ ok: true, cedulaQR: cedulaEnQR, nombreQR: nombreEnQR, contenidoQR: contenido });
+                // QR leído pero no reconocido
+                resolve({
+                    ok: false,
+                    error: `QR detectado pero no es de una cédula ecuatoriana.\nContenido: "${contenido.substring(0, 60)}..."\n\nFotografía el código QR del reverso de tu cédula.`,
+                    contenidoQR: contenido
+                });
             };
             img.onerror = () => resolve({ ok: false, error: 'No se pudo cargar la imagen. Usa JPG o PNG.' });
             img.src = e.target.result;
         };
+        reader.onerror = () => resolve({ ok: false, error: 'Error al leer el archivo.' });
         reader.readAsDataURL(file);
     });
 }
@@ -358,16 +393,45 @@ async function ejecutarPasoB() {
         if (loading) loading.classList.add('hidden');
 
         if (qrResult.ok) {
-            if (badge) { badge.className = 'verif-badge verif-ok'; badge.textContent = '✅ Verificado'; }
-            if (result) result.innerHTML = `<div style="color:var(--color-success);font-size:.875rem">
-                ✅ QR escaneado correctamente · Cédula coincide</div>`;
-            // ¡VERIFICADO! Guardar estado
-            setVerificacion('verificado', 'QR de cédula (automático)', { cedulaVerificada: cedula });
-            setTimeout(() => {
-                const main = document.getElementById('mainContent');
-                if (main) { main.innerHTML = renderVerificacionIdentidad(); lucide.createIcons(); }
-            }, 1200);
-            showNotification('🎉 ¡Identidad verificada exitosamente!', 'success');
+            if (badge) { badge.className = 'verif-badge verif-ok'; badge.textContent = '✅ QR Leído'; }
+
+            if (qrResult.tipo === 'url_registro_civil') {
+                // El QR contiene URL oficial — abrir para que el cliente confirme sus datos
+                if (result) result.innerHTML = `
+                <div style="background:#dcfce7;border-radius:8px;padding:.75rem;margin-top:.5rem">
+                    <div style="color:#166534;font-weight:700;margin-bottom:.5rem">
+                        ✅ QR oficial del Registro Civil detectado
+                    </div>
+                    <p style="font-size:.8rem;color:#166534;margin-bottom:.75rem">
+                        Se abrirá el sitio del Registro Civil para que confirmes que tus datos son correctos.
+                        El admin también puede verificar desde ese enlace.
+                    </p>
+                    <button onclick="window.open('${qrResult.urlQR}','_blank')"
+                        class="btn btn-success btn-sm">
+                        🌐 Ver mis datos en el Registro Civil
+                    </button>
+                </div>`;
+                // Guardar como verificado — el QR es del gobierno oficial
+                setVerificacion('verificado', 'QR Registro Civil Ecuador', {
+                    cedulaVerificada: cedula,
+                    urlQR: qrResult.urlQR
+                });
+                setTimeout(() => {
+                    const main = document.getElementById('mainContent');
+                    if (main) { main.innerHTML = renderVerificacionIdentidad(); lucide.createIcons(); }
+                }, 2500);
+                showNotification('🎉 ¡QR del Registro Civil verificado!', 'success');
+            } else {
+                // Texto plano (formato antiguo)
+                if (result) result.innerHTML = `<div style="color:var(--color-success);font-size:.875rem">
+                    ✅ Cédula verificada correctamente</div>`;
+                setVerificacion('verificado', 'QR de cédula (texto directo)', { cedulaVerificada: cedula });
+                setTimeout(() => {
+                    const main = document.getElementById('mainContent');
+                    if (main) { main.innerHTML = renderVerificacionIdentidad(); lucide.createIcons(); }
+                }, 1200);
+                showNotification('🎉 ¡Identidad verificada!', 'success');
+            }
         } else {
             if (badge) { badge.className = 'verif-badge verif-error'; badge.textContent = '❌ Error'; }
             if (result) result.innerHTML = `
@@ -400,7 +464,9 @@ function ejecutarPasoA() {
         `Por favor verifica mi identidad para acceder a mis notas de venta.\n` +
         `Te envío foto de mi cédula a continuación.`;
 
-    window.open(`https://wa.me/${contactInfo.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+    // Verificación siempre va al número de SOPORTE (593981676646)
+    // NO al maestro (593985998615) — el soporte lleva el registro de identidades
+    window.open(`https://wa.me/593981676646?text=${encodeURIComponent(msg)}`, '_blank');
 
     // Marcar como pendiente de verificación manual
     setVerificacion('pendiente_admin', 'WhatsApp (manual)');
