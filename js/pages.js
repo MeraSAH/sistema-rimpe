@@ -61,7 +61,10 @@ function renderInicio() {
             <div class="section">
                 <h2 class="section-title text-center">Lo Que Dicen Nuestros Clientes</h2>
                 <div class="grid grid-3">
-                    ${testimonios.slice(0, 3).map(t => createTestimonialCard(t)).join('')}
+                    ${(typeof getTestimoniosPublicos === 'function'
+                        ? getTestimoniosPublicos()
+                        : testimonios
+                      ).slice(0,3).map(t => createTestimonialCardEnhanced ? createTestimonialCardEnhanced(t) : createTestimonialCard(t)).join('')}
                 </div>
                 <div class="text-center mt-3">
                     <button onclick="navigateTo('testimonios')" class="btn btn-secondary">
@@ -203,6 +206,20 @@ function renderCatalogo(tipo) {
 }
 
 // Página de Perfil
+// ── Tabs del perfil — función global (no puede estar en innerHTML) ──────────
+function switchPerfilTab(tab) {
+    ['resumen','notas','pedidos','insignias'].forEach(function(t) {
+        var panel = document.getElementById('panel-'+t);
+        var btn   = document.getElementById('tab-'+t);
+        if (panel) panel.classList.add('hidden');
+        if (btn)   btn.classList.remove('active');
+    });
+    var activePanel = document.getElementById('panel-'+tab);
+    var activeBtn   = document.getElementById('tab-'+tab);
+    if (activePanel) activePanel.classList.remove('hidden');
+    if (activeBtn)   activeBtn.classList.add('active');
+}
+
 function renderPerfil() {
     const user = getUser();
     
@@ -278,8 +295,8 @@ function renderPerfil() {
                             <input type="text" id="regNombre" class="form-input" placeholder="Juan Pérez">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Teléfono *</label>
-                            <input type="tel" id="regTelefono" class="form-input" placeholder="0999999999">
+                            <label class="form-label">Cédula / RUC *</label>
+                            <input type="text" id="regCedula" class="form-input" placeholder="1234567890" maxlength="13">
                         </div>
                     </div>
                     <div class="form-group">
@@ -287,8 +304,50 @@ function renderPerfil() {
                         <input type="email" id="regEmail" class="form-input" placeholder="correo@ejemplo.com">
                     </div>
                     <div class="form-group">
+                        <label class="form-label">Teléfono *</label>
+                        <div style="display:flex;gap:.5rem">
+                            <select id="regPaisTel" class="form-select" style="width:115px;flex-shrink:0">
+                                <option value="+593">🇪🇨 +593</option>
+                                <option value="+1">🇺🇸 +1</option>
+                                <option value="+57">🇨🇴 +57</option>
+                                <option value="+51">🇵🇪 +51</option>
+                                <option value="+56">🇨🇱 +56</option>
+                                <option value="+54">🇦🇷 +54</option>
+                                <option value="+52">🇲🇽 +52</option>
+                                <option value="+34">🇪🇸 +34</option>
+                                <option value="+44">🇬🇧 +44</option>
+                                <option value="+33">🇫🇷 +33</option>
+                                <option value="+49">🇩🇪 +49</option>
+                            </select>
+                            <input type="tel" id="regTelefono" class="form-input" placeholder="0999999999">
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Contraseña * <small style="color:var(--color-gray-500)">(mín. 6 caracteres)</small></label>
-                        <input type="password" id="regPass" class="form-input" placeholder="••••••••">
+                        <div style="position:relative">
+                            <input type="password" id="regPass" class="form-input"
+                                placeholder="••••••••" style="padding-right:3rem"
+                                oninput="validarPassReg()">
+                            <button type="button" onclick="toggleRegPass('regPass','iconRegPass')"
+                                style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);
+                                       background:none;border:none;cursor:pointer;color:var(--color-gray-500)">
+                                <i data-lucide="eye" id="iconRegPass" style="width:18px;height:18px"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirmar Contraseña *</label>
+                        <div style="position:relative">
+                            <input type="password" id="regPassConf" class="form-input"
+                                placeholder="••••••••" style="padding-right:3rem"
+                                oninput="validarPassReg()">
+                            <button type="button" onclick="toggleRegPass('regPassConf','iconRegPassConf')"
+                                style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);
+                                       background:none;border:none;cursor:pointer;color:var(--color-gray-500)">
+                                <i data-lucide="eye" id="iconRegPassConf" style="width:18px;height:18px"></i>
+                            </button>
+                        </div>
+                        <div id="passMatchMsg" style="font-size:.75rem;margin-top:.25rem;display:none"></div>
                     </div>
                     <div class="grid grid-2">
                         <div class="form-group">
@@ -317,113 +376,342 @@ function renderPerfil() {
     }
 
     const insigniaActual = calcularInsigniaActual();
-    const descuento = getDescuentoActual();
-    const pedidos = getUserPedidos();
+    const descuento      = getDescuentoActual();
+    const pedidos        = getUserPedidos();
+    const verificacion   = typeof getVerificacion === 'function' ? getVerificacion() : { estado: 'sin_verificar' };
+    const verificado     = verificacion.estado === 'verificado';
+    const pendiente      = verificacion.estado === 'pendiente_admin';
+
+    const nivelGrad  = typeof getGradientInsignia === 'function' ? getGradientInsignia(insigniaActual?.nivel) : '';
+    const esManual   = insigniaActual?.esManual === true;
+    const nivelClass = insigniaActual?.nivel === 'Elite' ? 'perfil-elite'
+                     : insigniaActual?.nivel === 'Premium' ? 'perfil-premium' : '';
+
+    // Mis Notas — filtradas por cédula
+    const todasNotas = typeof getNotasVenta === 'function' ? getNotasVenta() : [];
+    const misNotas   = todasNotas.filter(n =>
+        (user.cedula && n.cliente?.cedula === user.cedula) ||
+        (user.email  && n.cliente?.email  === user.email)
+    );
+
+    // Mis Pedidos (carrito enviado)
+    const misPedidos = pedidos;
 
     return `
-        <div class="fade-in">
-            <div class="perfil-header">
-                <div>
-                    <h1>¡Hola, ${user.nombre}! 👋</h1>
-                    <p>${user.email}</p>
-                    <p class="perfil-date">Miembro desde ${formatDate(user.fechaRegistro || new Date().toISOString())}</p>
-                </div>
-                <div class="perfil-insignia-icon">${insigniaActual?.icono || '🟤'}</div>
+    <div class="fade-in">
+        <!-- CABECERA CON FONDO DINÁMICO -->
+        <div class="perfil-header ${nivelClass}" style="${nivelGrad ? 'background:'+nivelGrad : ''}">
+            <div style="flex:1">
+                <h1>¡Hola, ${user.nombre}! 👋</h1>
+                <p style="opacity:.85">${user.email}</p>
+                ${user.cedula ? `<p style="font-size:.8rem;opacity:.7">Cédula: ${user.cedula}</p>` : ''}
+                <p class="perfil-date">Miembro desde ${formatDate(user.fechaRegistro||new Date().toISOString())}</p>
+                ${esManual ? `
+                <div style="margin-top:.5rem;display:inline-flex;align-items:center;gap:.4rem;
+                    background:rgba(255,255,255,.15);padding:4px 12px;border-radius:20px;font-size:.75rem">
+                    🎁 El administrador te otorgó: ${insigniaActual?.icono} ${insigniaActual?.nombre}
+                </div>` : ''}
             </div>
+            <div style="text-align:center;flex-shrink:0">
+                <div class="perfil-insignia-icon">${insigniaActual?.icono||'🥉'}</div>
+                <div style="font-size:.75rem;opacity:.85;margin-top:.25rem;font-weight:700">
+                    ${insigniaActual?.nombre||'Bronce'}
+                </div>
+                ${verificado
+                    ? '<div style="font-size:.7rem;background:rgba(16,185,129,.25);padding:2px 8px;border-radius:20px;margin-top:.25rem">✅ Verificado</div>'
+                    : '<div style="font-size:.7rem;background:rgba(239,68,68,.25);padding:2px 8px;border-radius:20px;margin-top:.25rem">⚠️ Sin verificar</div>'
+                }
+            </div>
+        </div>
 
+        <!-- BANNER VERIFICACIÓN (si no está verificado) -->
+        ${!verificado && !pendiente ? `
+        <div class="alert alert-warning" style="cursor:pointer" onclick="navigateTo('verificacion-identidad')">
+            <i data-lucide="shield-alert"></i>
+            <div style="flex:1">
+                <strong>⚠️ Verifica tu identidad para acceder a tus notas de venta</strong>
+                <p style="font-size:.875rem;margin:.25rem 0 0">
+                    Sin verificación no puedes ver tus documentos. Toca aquí para verificarte en 2 minutos.
+                </p>
+            </div>
+            <i data-lucide="chevron-right"></i>
+        </div>` : ''}
+        ${pendiente ? `
+        <div class="alert" style="background:#fef3c7;border-left:4px solid #f59e0b">
+            <i data-lucide="clock"></i>
+            <div>
+                <strong>⏳ Verificación en revisión</strong>
+                <p style="font-size:.875rem">Tu solicitud está siendo revisada. En menos de 24 horas recibirás confirmación.</p>
+            </div>
+        </div>` : ''}
+
+        <!-- TABS DE NAVEGACIÓN -->
+        <div class="perfil-tabs">
+            <button class="perfil-tab active" id="tab-resumen"   onclick="switchPerfilTab('resumen')">
+                <i data-lucide="user"></i> Resumen
+            </button>
+            <button class="perfil-tab" id="tab-notas"    onclick="switchPerfilTab('notas')">
+                <i data-lucide="file-text"></i> Mis Notas
+                ${misNotas.length > 0 ? `<span class="tab-badge">${misNotas.length}</span>` : ''}
+            </button>
+            <button class="perfil-tab" id="tab-pedidos"  onclick="switchPerfilTab('pedidos')">
+                <i data-lucide="shopping-bag"></i> Mis Pedidos
+                ${misPedidos.length > 0 ? `<span class="tab-badge">${misPedidos.length}</span>` : ''}
+            </button>
+            <button class="perfil-tab" id="tab-insignias" onclick="switchPerfilTab('insignias')">
+                <i data-lucide="award"></i> Insignias
+            </button>
+        </div>
+
+        <!-- TAB: RESUMEN -->
+        <div id="panel-resumen" class="perfil-panel">
             <div class="grid grid-2 mb-4">
                 <div class="card">
                     <div class="card-body">
-                        <h2 class="card-title">
-                            <i data-lucide="award"></i>
-                            Tu Insignia Actual
-                        </h2>
-                        ${insigniaActual ? `
-                            <div class="insignia-actual">
-                                <div class="insignia-icon-large">${insigniaActual.icono}</div>
-                                <h3>${insigniaActual.nombre}</h3>
-                                <div class="insignia-nivel">${insigniaActual.nivel}</div>
-                                ${descuento > 0 ? `<div class="descuento-badge">🎉 ${descuento}% de descuento activo</div>` : ''}
-                                <div class="beneficios-list">
-                                    <strong>Beneficios:</strong>
-                                    ${insigniaActual.beneficios.map(b => `
-                                        <div class="beneficio-item">
-                                            <i data-lucide="check-circle"></i>
-                                            <span>${b}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
+                        <h3 class="card-title"><i data-lucide="award"></i> Insignia Actual</h3>
+                        <div class="insignia-actual">
+                            <div class="insignia-icon-large">${insigniaActual?.icono||'🥉'}</div>
+                            <h3>${insigniaActual?.nombre||'Bronce'}</h3>
+                            <div class="insignia-nivel">${insigniaActual?.nivel||'Simple'}</div>
+                            ${descuento > 0 ? `<div class="descuento-badge">🎉 ${descuento}% OFF activo</div>` : ''}
+                            <div class="beneficios-list mt-2">
+                                ${(insigniaActual?.beneficios||[]).map(b => `
+                                <div class="beneficio-item">
+                                    <i data-lucide="check-circle"></i><span>${b}</span>
+                                </div>`).join('')}
                             </div>
-                        ` : ''}
+                        </div>
                     </div>
                 </div>
-
                 <div class="card">
                     <div class="card-body">
-                        <h2 class="card-title">
-                            <i data-lucide="trending-up"></i>
-                            Estadísticas
-                        </h2>
+                        <h3 class="card-title"><i data-lucide="trending-up"></i> Estadísticas</h3>
                         <div class="estadisticas">
                             <div class="estadistica-item">
-                                <span>Compras Realizadas:</span>
-                                <strong>${user.compras || 0}</strong>
+                                <span>Compras:</span><strong>${user.compras||0}</strong>
                             </div>
                             <div class="estadistica-item">
-                                <span>Descuento Activo:</span>
+                                <span>Descuento activo:</span>
                                 <strong class="text-success">${descuento}%</strong>
                             </div>
                             <div class="estadistica-item">
-                                <span>Pedidos Activos:</span>
-                                <strong>${pedidos.length}</strong>
+                                <span>Notas de venta:</span>
+                                <strong>${misNotas.length}</strong>
+                            </div>
+                            <div class="estadistica-item">
+                                <span>Pedidos enviados:</span>
+                                <strong>${misPedidos.length}</strong>
+                            </div>
+                            <div class="estadistica-item">
+                                <span>Identidad:</span>
+                                <strong style="color:${verificado?'var(--color-success)':'var(--color-warning)'}">
+                                    ${verificado ? '✅ Verificada' : pendiente ? '⏳ En revisión' : '⚠️ Pendiente'}
+                                </strong>
                             </div>
                         </div>
-                        <button onclick="handleClienteLogout()" class="btn btn-secondary w-full mt-3">
-                            <i data-lucide="log-out"></i>
-                            Cerrar Sesión
+                        ${!verificado && !pendiente ? `
+                        <button onclick="navigateTo('verificacion-identidad')"
+                            class="btn btn-primary w-full mt-3" style="background:#f59e0b">
+                            <i data-lucide="shield-check"></i> Verificar Identidad
+                        </button>` : ''}
+                        <button onclick="handleClienteLogout()" class="btn btn-secondary w-full mt-2">
+                            <i data-lucide="log-out"></i> Cerrar Sesión
                         </button>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="card">
-                <div class="card-body">
-                    <h2 class="card-title">🏅 Sistema de Insignias Completo</h2>
-                    
-                    <h3 class="insignias-subtitle">Nivel Simple</h3>
-                    <div class="grid grid-3 mb-3">
-                        ${insignias.filter(i => i.nivel === 'Simple').map(ins => 
-                            createInsigniaCard(ins, (user.compras || 0) >= (ins.comprasMin || 0))
-                        ).join('')}
+        <!-- TAB: MIS NOTAS DE VENTA -->
+        <div id="panel-notas" class="perfil-panel hidden">
+            ${!verificado && !pendiente ? `
+            <div style="text-align:center;padding:3rem 1rem">
+                <div style="font-size:3rem;margin-bottom:1rem">🔒</div>
+                <h3>Acceso Bloqueado</h3>
+                <p style="color:var(--color-gray-600);margin:.75rem 0">
+                    Debes verificar tu identidad para ver tus notas de venta.<br>
+                    Esto protege tu información y evita el uso fraudulento de tus documentos.
+                </p>
+                <button onclick="navigateTo('verificacion-identidad')" class="btn btn-primary">
+                    <i data-lucide="shield-check"></i> Verificar Ahora
+                </button>
+            </div>` : misNotas.length === 0 ? `
+            <div style="text-align:center;padding:3rem 1rem;color:var(--color-gray-500)">
+                <i data-lucide="file-x" style="width:3rem;height:3rem;margin-bottom:1rem"></i>
+                <p>No tienes notas de venta registradas aún.</p>
+                <p style="font-size:.875rem">Cuando realices una compra, aparecerán aquí.</p>
+            </div>` : `
+            <div class="mb-3" style="display:flex;justify-content:space-between;align-items:center">
+                <h3>${misNotas.length} nota${misNotas.length!==1?'s':''} de venta</h3>
+            </div>
+            <div class="grid grid-2">
+                ${misNotas.map(n => `
+                <div class="card" style="border-left:4px solid ${
+                    n.estado==='pagada'?'#10b981':n.estado==='pendiente'?'#eab308':
+                    n.estado==='cancelada'?'#ef4444':'#f59e0b'}">
+                    <div class="card-body">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem">
+                            <strong style="font-size:.875rem">${n.numeroNota||'—'}</strong>
+                            <span class="badge badge-${n.estado||'pendiente'}">${estadosNota[n.estado]?.nombre||n.estado}</span>
+                        </div>
+                        <p style="font-size:.8rem;color:var(--color-gray-600)">📅 ${n.fechaEmision||'—'}</p>
+                        <p style="font-size:1.1rem;font-weight:900;color:var(--color-primary);margin:.5rem 0">
+                            $${(n.total||0).toFixed(2)}
+                        </p>
+                        <div style="font-size:.75rem;color:var(--color-gray-600);margin-bottom:.75rem">
+                            ${(n.items||[]).slice(0,2).map(i => `${i.cantidad}x ${i.descripcion}`).join(' · ')}
+                            ${(n.items||[]).length > 2 ? ' · ...' : ''}
+                        </div>
+                        ${(n.abonos||[]).length > 0 ? `
+                        <div style="font-size:.75rem;background:#f0fdf4;padding:4px 8px;border-radius:6px;margin-bottom:.5rem">
+                            💰 Abonado: $${(n.abonos||[]).reduce((s,a)=>s+(a.monto||0),0).toFixed(2)} 
+                            · Saldo: $${Math.max(0,(n.total||0)-(n.abonos||[]).reduce((s,a)=>s+(a.monto||0),0)).toFixed(2)}
+                        </div>` : ''}
+                        <button onclick="verDetalleNota(${n.id})" class="btn btn-primary btn-sm w-full">
+                            <i data-lucide="printer"></i> Ver / Imprimir PDF
+                        </button>
                     </div>
+                </div>`).join('')}
+            </div>`}
+        </div>
 
-                    <h3 class="insignias-subtitle">Nivel Premium</h3>
-                    <div class="grid grid-4 mb-3">
-                        ${insignias.filter(i => i.nivel === 'Premium').map(ins => 
-                            createInsigniaCard(ins, (user.compras || 0) >= (ins.comprasMin || 0))
-                        ).join('')}
-                    </div>
+        <!-- TAB: MIS PEDIDOS (seguimiento) -->
+        <div id="panel-pedidos" class="perfil-panel hidden">
+            ${misPedidos.length === 0 ? `
+            <div style="text-align:center;padding:3rem 1rem;color:var(--color-gray-500)">
+                <i data-lucide="shopping-bag" style="width:3rem;height:3rem;margin-bottom:1rem"></i>
+                <p>No tienes pedidos enviados aún.</p>
+                <p style="font-size:.875rem">Cuando envíes un pedido por WhatsApp, aparecerá aquí.</p>
+                <button onclick="navigateTo('catalogo-muebleria-interior')" class="btn btn-primary mt-3">
+                    Ver Catálogo
+                </button>
+            </div>` : `
+            <div class="mb-3">
+                <h3>${misPedidos.length} pedido${misPedidos.length!==1?'s':''} enviados</h3>
+            </div>
+            ${misPedidos.map((p, i) => {
+                const estadosPedido = {
+                    'por-iniciar': { label: 'Por iniciar',   color: '#94a3b8', icon: '📋' },
+                    'en-proceso':  { label: 'En proceso',    color: '#f59e0b', icon: '🔨' },
+                    'listo':       { label: 'Listo',          color: '#10b981', icon: '✅' },
+                    'entregado':   { label: 'Entregado',      color: '#6366f1', icon: '📦' },
+                };
+                const ep = estadosPedido[p.estado] || estadosPedido['por-iniciar'];
+                const pasos = ['por-iniciar','en-proceso','listo','entregado'];
+                const idxActual = pasos.indexOf(p.estado);
+                return `
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+                            <div>
+                                <strong>Pedido #${i+1}</strong>
+                                <span style="font-size:.75rem;color:var(--color-gray-500);margin-left:.5rem">
+                                    ${new Date(p.fecha).toLocaleDateString('es-EC')}
+                                </span>
+                            </div>
+                            <span style="background:${ep.color};color:#fff;padding:3px 10px;
+                                border-radius:20px;font-size:.75rem;font-weight:700">
+                                ${ep.icon} ${ep.label}
+                            </span>
+                        </div>
 
-                    <h3 class="insignias-subtitle">Nivel Elite</h3>
-                    <div class="grid grid-3">
-                        ${insignias.filter(i => i.nivel === 'Elite').map(ins => 
-                            createInsigniaCard(ins, false)
-                        ).join('')}
-                    </div>
+                        <!-- Barra de progreso -->
+                        <div style="display:flex;gap:0;margin-bottom:1rem">
+                            ${pasos.map((paso, j) => {
+                                const ep2 = estadosPedido[paso];
+                                const activo    = j <= idxActual;
+                                const esCurrent = j === idxActual;
+                                return `<div style="flex:1;text-align:center">
+                                    <div style="height:4px;background:${activo?ep.color:'#e2e8f0'};
+                                        ${j===0?'border-radius:4px 0 0 4px':''}
+                                        ${j===pasos.length-1?'border-radius:0 4px 4px 0':''}"></div>
+                                    <div style="font-size:.6rem;margin-top:.25rem;
+                                        color:${esCurrent?ep.color:'var(--color-gray-400)'};
+                                        font-weight:${esCurrent?'700':'400'}">
+                                        ${ep2.icon} ${ep2.label}
+                                    </div>
+                                </div>`;
+                            }).join('')}
+                        </div>
 
-                    <div class="maestro-benjamin">
-                        <div class="maestro-icon">👑</div>
-                        <h3>Maestro Benjamín</h3>
-                        <p>Título honorífico único - Máxima distinción como cliente ejemplar</p>
+                        <div style="font-size:.8rem;color:var(--color-gray-600);margin-bottom:.5rem">
+                            ${(p.items||[]).slice(0,3).map(it =>
+                                `${it.config?.cantidad||1}x ${it.nombre||'Producto'}`
+                            ).join(' · ')}
+                        </div>
+                        <div style="font-weight:700;color:var(--color-primary)">
+                            Total: $${(p.total||0).toFixed(2)}
+                        </div>
+                        <a href="https://wa.me/${contactInfo?.whatsapp||'593985998615'}?text=${encodeURIComponent('Hola, consulto el estado de mi pedido #'+(i+1)+' del '+new Date(p.fecha).toLocaleDateString('es-EC'))}"
+                           target="_blank" class="btn btn-secondary btn-sm mt-2">
+                            <i data-lucide="message-circle"></i> Consultar estado
+                        </a>
                     </div>
-                </div>
+                </div>`;
+            }).join('')}`}
+        </div>
+
+        <!-- TAB: INSIGNIAS -->
+        <div id="panel-insignias" class="perfil-panel hidden">
+            <h3 class="insignias-subtitle">Nivel Simple</h3>
+            <div class="grid grid-3 mb-3">
+                ${insignias.filter(i=>i.nivel==='Simple').map(ins=>
+                    createInsigniaCard(ins,(user.compras||0)>=(ins.comprasMin||0))
+                ).join('')}
+            </div>
+            <h3 class="insignias-subtitle">Nivel Premium</h3>
+            <div class="grid grid-4 mb-3">
+                ${insignias.filter(i=>i.nivel==='Premium').map(ins=>
+                    createInsigniaCard(ins,(user.compras||0)>=(ins.comprasMin||0))
+                ).join('')}
+            </div>
+            <h3 class="insignias-subtitle">Nivel Elite</h3>
+            <div class="grid grid-3">
+                ${insignias.filter(i=>i.nivel==='Elite').map(ins=>
+                    createInsigniaCard(ins,false)
+                ).join('')}
+            </div>
+            <div class="maestro-benjamin">
+                <div class="maestro-icon">👑</div>
+                <h3>Maestro Benjamín</h3>
+                <p>Título honorífico único - Máxima distinción como cliente ejemplar</p>
             </div>
         </div>
+    </div>
+
     `;
 }
 
 // Página de Carrito
+
+// Alias de seguridad — createCartItem vive en ui.js pero por si acaso
+function _ensureCreateCartItem() {
+    if (typeof createCartItem === 'undefined') {
+        window.createCartItem = function(item) {
+            return `<div class="cart-item">
+                <div class="cart-item-info">
+                    <div class="cart-item-icon">${item.imagen||'📦'}</div>
+                    <div class="cart-item-details">
+                        <h3>${item.config?.cantidad||1}x ${item.nombre}</h3>
+                        <div class="cart-item-specs">
+                            <span><strong>Color:</strong> ${item.config?.color||'—'}</span>
+                            <span><strong>Material:</strong> ${item.config?.material||'—'}</span>
+                            <span><strong>Entrega:</strong> ${item.config?.tipoEntrega==='terminada'?'Terminada':'Rústica'}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cart-item-actions">
+                    <div class="cart-item-price">$${(item.precioTotal||0).toFixed(2)}</div>
+                    <button onclick="removeCartItem(${item.id})" class="btn-remove">
+                        <i data-lucide="trash-2"></i> Eliminar</button>
+                </div>
+            </div>`;
+        };
+    }
+}
+
 function renderCarrito() {
+    _ensureCreateCartItem();
     const cart = getCart();
     const descuento = getDescuentoActual();
     const subtotal = cart.reduce((sum, item) => sum + item.precioTotal, 0);
@@ -486,7 +774,7 @@ function renderCarrito() {
                     <i data-lucide="alert-circle"></i>
                     <p>Precio final se confirma por WhatsApp según especificaciones exactas y condiciones del proyecto.</p>
                 </div>
-                <button onclick="generateWhatsAppMessage()" class="btn btn-success w-full btn-large">
+                <button onclick="enviarPedidoWhatsApp()" class="btn btn-success w-full btn-large">
                     <i data-lucide="message-circle"></i>
                     Realizar Pedido por WhatsApp
                 </button>
@@ -496,20 +784,105 @@ function renderCarrito() {
 }
 
 // Página de Testimonios
-function renderTestimonios() {
-    return `
-        <div class="fade-in">
-            <div class="page-header text-center">
-                <i data-lucide="star" class="page-icon"></i>
-                <h1>Lo Que Dicen Nuestros Clientes</h1>
-                <p>Testimonios reales de personas que confiaron en nosotros</p>
-            </div>
+// ── Filtro de testimonios — función global ──────────────────
+function filtrarTestimonios(n) {
+    var fuente  = (typeof getTestimoniosPublicos === 'function')
+        ? getTestimoniosPublicos() : (typeof testimonios !== 'undefined' ? testimonios : []);
+    var filtrados = n === 0 ? fuente : fuente.filter(function(t){ return (t.calificacion||5) === n; });
+    var grid = document.getElementById('gridTestimonios');
+    if (grid) {
+        grid.innerHTML = filtrados.map(function(t){ return createTestimonialCardEnhanced(t); }).join('');
+        lucide.createIcons();
+    }
+    document.querySelectorAll('[id^="ftBtn"]').forEach(function(btn) {
+        var isActive = btn.id === 'ftBtn'+n;
+        btn.style.background = isActive ? 'var(--color-primary)' : 'transparent';
+        btn.style.color      = isActive ? '#fff' : 'var(--color-gray-600)';
+        btn.style.borderColor = isActive ? 'var(--color-primary)' : 'var(--color-gray-200)';
+    });
+}
 
-            <div class="grid grid-3">
-                ${testimonios.map(t => createTestimonialCard(t)).join('')}
+function renderTestimonios() {
+    // Mezclar testimonios de la BD con los hardcodeados del data.js
+    const dbTestimonios = typeof getTestimoniosPublicos === 'function' ? getTestimoniosPublicos() : [];
+    const todos = dbTestimonios.length > 0 ? dbTestimonios : testimonios;
+    const stats = typeof getEstadisticasTestimonios === 'function' ? getEstadisticasTestimonios() : null;
+
+    // Calcular promedio de estrellas
+    const promedio = todos.length > 0
+        ? (todos.reduce((s,t) => s + (t.calificacion||5), 0) / todos.length).toFixed(1)
+        : '5.0';
+
+    return `
+    <div class="fade-in">
+        <div class="page-header text-center">
+            <i data-lucide="star" class="page-icon"></i>
+            <h1>Lo Que Dicen Nuestros Clientes</h1>
+            <p>Testimonios reales de personas que confiaron en nosotros</p>
+            <div style="display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:1rem;flex-wrap:wrap">
+                <div style="font-size:2.5rem;font-weight:900;color:var(--color-primary)">${promedio}</div>
+                <div>
+                    <div style="color:#f59e0b;font-size:1.25rem">${'★'.repeat(Math.round(parseFloat(promedio)))}${'☆'.repeat(5-Math.round(parseFloat(promedio)))}</div>
+                    <div style="font-size:.8rem;color:var(--color-gray-500)">${todos.length} testimonio${todos.length!==1?'s':''}</div>
+                </div>
             </div>
         </div>
+
+        <!-- Filtros por calificación -->
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;margin-bottom:1.5rem" id="filtroTestimonios">
+            ${[0,5,4,3].map(n => `
+            <button onclick="filtrarTestimonios(${n})" id="ftBtn${n}"
+                style="padding:6px 14px;border-radius:20px;border:2px solid ${n===0?'var(--color-primary)':'var(--color-gray-200)'};
+                       background:${n===0?'var(--color-primary)':'transparent'};
+                       color:${n===0?'#fff':'var(--color-gray-600)'};
+                       font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s">
+                ${n===0 ? 'Todos' : '★'.repeat(n)+' ('+todos.filter(t=>(t.calificacion||5)===n).length+')'}
+            </button>`).join('')}
+        </div>
+
+        <div class="grid grid-3" id="gridTestimonios">
+            ${todos.map(t => createTestimonialCardEnhanced(t)).join('')}
+        </div>
+
+        ${todos.length === 0 ? `
+        <div style="text-align:center;padding:2rem;color:var(--color-gray-500)">
+            <p>Aún no hay testimonios publicados. ¡Sé el primero!</p>
+        </div>` : ''}
+
+        <!-- Formulario para dejar testimonio -->
+        <hr style="margin:2rem 0;border-color:var(--color-gray-200)">
+        <h2 style="text-align:center;margin-bottom:.5rem">¿Ya compraste con nosotros?</h2>
+        <p style="text-align:center;color:var(--color-gray-600);margin-bottom:1rem">
+            Comparte tu experiencia y ayuda a otros clientes a conocernos
+        </p>
+        ${typeof renderFormTestimonio === 'function' ? renderFormTestimonio() : ''}
+    </div>
+
     `;
+}
+
+// Tarjeta de testimonio mejorada
+function createTestimonialCardEnhanced(t) {
+    const stars = '★'.repeat(t.calificacion||5) + '☆'.repeat(5-(t.calificacion||5));
+    const esDestacado = t.estado === 'destacado';
+    return `
+    <div class="card testimonial-card" style="${esDestacado?'border:2px solid var(--color-primary);background:linear-gradient(135deg,#fff 0%,#fef9c3 100%)':''}">
+        ${esDestacado ? '<div style="background:var(--color-primary);color:#fff;font-size:.7rem;font-weight:700;padding:3px 10px;text-align:center">⭐ DESTACADO</div>' : ''}
+        <div class="card-body">
+            <div class="testimonial-header">
+                <div class="testimonial-avatar">${t.imagen||'👤'}</div>
+                <div>
+                    <h4>${t.nombre}</h4>
+                    <div class="testimonial-stars">${stars}</div>
+                </div>
+            </div>
+            <p class="testimonial-text">"${t.texto}"</p>
+            <div class="testimonial-footer">
+                <span class="testimonial-project">${t.proyecto}</span>
+                <span class="testimonial-date">${typeof formatDate==='function' ? formatDate(t.fecha) : t.fecha}</span>
+            </div>
+        </div>
+    </div>`;
 }
 
 // Página de Galería
@@ -619,14 +992,10 @@ function renderContacto() {
                                 <i data-lucide="mail"></i>
                                 <div>
                                     <strong>Email</strong>
-                                    <p id="contact-email-display"></p>
-                                    <script>
-                                        (function(){
-                                            var u='mycbenjamin',d='gmail.com';
-                                            var el=document.getElementById('contact-email-display');
-                                            if(el) el.innerHTML='<a href="mailto:'+u+'@'+d+'">'+u+'@'+d+'</a>';
-                                        })();
-                                    </script>
+                                    <a href="mailto:mycbenjamin@gmail.com" 
+                                       style="color:var(--color-primary);font-weight:600">
+                                       mycbenjamin@gmail.com
+                                    </a>
                                 </div>
                             </div>
                             <div class="contacto-item">
@@ -1011,6 +1380,16 @@ function renderAdminPanel() {
             <div class="action-card" onclick="navigateTo('admin-blog')">
                 <i data-lucide="book-open"></i><h3>Blog</h3><p>Publicar artículos</p>
             </div>
+            <div class="action-card" onclick="navigateTo('admin-pedidos')" style="position:relative">
+                <i data-lucide="package"></i><h3>Pedidos</h3><p>Seguimiento de estado</p>
+                ${(()=>{const p=getPedidos().filter(x=>x.estado==='por-iniciar'||x.estado==='en-proceso');return p.length>0?'<span style="position:absolute;top:.75rem;right:.75rem;background:#ef4444;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800">'+p.length+'</span>':''})()}
+            </div>
+            <div class="action-card" onclick="navigateTo('admin-testimonios')" style="position:relative">
+                <i data-lucide="star"></i><h3>Testimonios</h3><p>Revisar y publicar</p>
+                ${(typeof getEstadisticasTestimonios==='function'&&getEstadisticasTestimonios().pendientes>0)?
+                  '<span style="position:absolute;top:.75rem;right:.75rem;background:#ef4444;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800">'
+                  +getEstadisticasTestimonios().pendientes+'</span>':''}
+            </div>
         </div>
 
         <div class="card">
@@ -1046,6 +1425,20 @@ function renderNuevaNota(notaEditar = null) {
         <div class="card">
             <div class="card-body">
                 <h3 class="mb-3">Datos del Cliente</h3>
+                <!-- Búsqueda/Autorelleno de cliente existente -->
+                <div class="form-group">
+                    <label class="form-label">🔍 Buscar cliente existente (opcional)</label>
+                    <div style="position:relative">
+                        <input type="text" id="buscarCliente" class="form-input"
+                            placeholder="Escribe nombre o cédula..."
+                            oninput="buscarClienteNota(this.value)"
+                            autocomplete="off">
+                        <div id="resultadosCliente" style="position:absolute;top:100%;left:0;right:0;
+                            background:#fff;border:1px solid var(--color-gray-200);border-radius:8px;
+                            box-shadow:var(--shadow-lg);z-index:100;max-height:200px;overflow-y:auto;display:none">
+                        </div>
+                    </div>
+                </div>
                 <div class="grid grid-2">
                     <div class="form-group">
                         <label class="form-label">Nombre Completo *</label>
@@ -1094,8 +1487,13 @@ function renderNuevaNota(notaEditar = null) {
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Observaciones</label>
-                    <textarea id="observaciones" class="form-textarea" rows="3">${ed?.observaciones||''}</textarea>
+                    <label class="form-label">Observaciones
+                        <button type="button" onclick="restaurarObsDefault()"
+                            style="font-size:.7rem;background:none;border:1px solid var(--color-primary);
+                                   color:var(--color-primary);padding:1px 6px;border-radius:4px;
+                                   cursor:pointer;margin-left:.5rem">↩ Restaurar texto garantía</button>
+                    </label>
+                    <textarea id="observaciones" class="form-textarea" rows="3">${ed?.observaciones||'El trabajo incluye garantía de 6 meses en mano de obra. Los materiales son de primera calidad. Cualquier ajuste dentro del período de garantía será atendido sin costo.'}</textarea>
                 </div>
 
                 <hr style="margin:1.5rem 0;border-color:var(--color-gray-200)">
@@ -1132,6 +1530,12 @@ function renderNuevaNota(notaEditar = null) {
     </div>`;
 }
 
+
+function restaurarObsDefault() {
+    const el = document.getElementById('observaciones');
+    if (el) el.value = 'El trabajo incluye garantía de 6 meses en mano de obra. Los materiales utilizados son de primera calidad. Cualquier ajuste o reclamo dentro del período de garantía será atendido sin costo adicional.';
+}
+
 function buildItemRow(n, item = null) {
     return `
     <div class="item-row" data-item="${n}" style="background:var(--color-gray-50);padding:1rem;border-radius:8px;margin-bottom:1rem;border-left:4px solid var(--color-primary)">
@@ -1142,8 +1546,14 @@ function buildItemRow(n, item = null) {
                     oninput="actualizarPreview()" required>
             </div>
             <div class="form-group" style="grid-column:span 2">
-                <label class="form-label">Descripción *</label>
-                <input type="text" class="form-input item-descripcion" value="${item?.descripcion||''}" required>
+                <label class="form-label">Descripción *
+                    <button type="button" onclick="abrirSelectorProducto(this)"
+                        style="font-size:.7rem;background:none;border:1px solid var(--color-primary);
+                               color:var(--color-primary);padding:1px 6px;border-radius:4px;
+                               cursor:pointer;margin-left:.5rem">📦 Elegir del catálogo</button>
+                </label>
+                <input type="text" class="form-input item-descripcion" value="${item?.descripcion||''}"
+                    placeholder="Descripción del trabajo o producto" required>
             </div>
             <div class="form-group">
                 <label class="form-label">Precio Unit. *</label>
@@ -1887,8 +2297,8 @@ function renderAdminClientes() {
                         const ins = getInsigniaCliente(c.cedula, notasPagadas);
                         return `
                         <tr>
-                            <td><strong>${c.nombre}</strong></td>
-                            <td style="font-size:.8rem">${c.cedula}</td>
+                            <td><strong style="color:var(--color-gray-800)">${c.nombre}</strong></td>
+                            <td style="font-size:.8rem;color:var(--color-gray-700)">${c.cedula}</td>
                             <td>${c.telefono||'—'}</td>
                             <td>
                                 <span class="badge badge-pagada">${notasPagadas}</span>
@@ -2412,22 +2822,30 @@ async function handleRegister() {
     const nombre   = document.getElementById('regNombre').value.trim();
     const email    = document.getElementById('regEmail').value.trim();
     const pass     = document.getElementById('regPass')?.value || '';
-    const telefono = document.getElementById('regTelefono').value.trim();
+    const cedula   = document.getElementById('regCedula')?.value.trim() || '';
+    const pais     = document.getElementById('regPaisTel')?.value || '+593';
+    const telRaw   = document.getElementById('regTelefono').value.trim();
+    const telefono = telRaw ? (pais + ' ' + telRaw) : '';
     const errDiv   = document.getElementById('regClienteError');
     const errMsg   = document.getElementById('regClienteErrorMsg');
-    if (!nombre || !email || !telefono) {
-        if (errMsg) errMsg.textContent = 'Completa los campos obligatorios (*)';
+    if (!nombre || !email || !telefono || !cedula) {
+        if (errMsg) errMsg.textContent = 'Completa todos los campos obligatorios (nombre, cédula, teléfono, email)';
         if (errDiv) errDiv.classList.remove('hidden'); return;
     }
+    const passConf = document.getElementById('regPassConf')?.value || '';
     if (pass && pass.length < 6) {
         if (errMsg) errMsg.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+        if (errDiv) errDiv.classList.remove('hidden'); return;
+    }
+    if (pass && passConf && pass !== passConf) {
+        if (errMsg) errMsg.textContent = 'Las contraseñas no coinciden. Verifica e intenta de nuevo.';
         if (errDiv) errDiv.classList.remove('hidden'); return;
     }
     const btn = document.getElementById('regBtn');
     if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;display:inline-block"></div> Creando cuenta...'; }
     if (errDiv) errDiv.classList.add('hidden');
     const perfil = {
-        nombre, telefono,
+        nombre, telefono, cedula,
         direccion:  document.getElementById('regDireccion')?.value.trim() || '',
         ciudad:     document.getElementById('regCiudad')?.value.trim()    || 'Quito',
         referencia: document.getElementById('regReferencia')?.value.trim()|| ''
@@ -2437,10 +2855,10 @@ async function handleRegister() {
         : { ok: true, local: true, _localFallback: true };
     if (result._localFallback) {
         // Registro sin contraseña (modo local)
-        localStorage.setItem('benjaminUser', JSON.stringify({
-            ...perfil, email, compras: 0,
-            fechaRegistro: new Date().toISOString(), pedidos: []
-        }));
+        const userLocalFb = { ...perfil, email, compras: 0,
+            fechaRegistro: new Date().toISOString(), pedidos: [] };
+        localStorage.setItem('benjaminUser', JSON.stringify(userLocalFb));
+        _registrarClienteEnDB(userLocalFb);
     }
     if (result.ok) {
         if (result.confirmacionRequerida) {
@@ -2774,4 +3192,787 @@ function eliminarBlogItem(id) {
     saveBlogAdmin(items.filter(x => x.id != id));
     showNotification('Artículo eliminado', 'info');
     navigateTo('admin-blog');
+}
+
+// ========================================
+// FUNCIONES AUXILIARES — Nueva Nota
+// ========================================
+
+// Autorelleno de clientes en nueva nota
+function buscarClienteNota(query) {
+    const div = document.getElementById('resultadosCliente');
+    if (!div) return;
+    if (!query || query.length < 2) { div.style.display = 'none'; return; }
+    const clientes = getClientesList();
+    const q = query.toLowerCase();
+    const encontrados = clientes.filter(c =>
+        c.nombre?.toLowerCase().includes(q) ||
+        c.cedula?.includes(q)
+    ).slice(0, 6);
+    if (encontrados.length === 0) { div.style.display = 'none'; return; }
+    div.innerHTML = encontrados.map(c => `
+    <div onclick="rellenarClienteNota(${JSON.stringify(c).replace(/"/g,'&quot;')})"
+         style="padding:.6rem 1rem;cursor:pointer;border-bottom:1px solid var(--color-gray-100);
+                display:flex;justify-content:space-between;align-items:center"
+         onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background=''">
+        <div>
+            <strong style="font-size:.875rem">${c.nombre}</strong>
+            <span style="font-size:.75rem;color:var(--color-gray-500);margin-left:.5rem">${c.cedula}</span>
+        </div>
+        <span style="font-size:.75rem;color:var(--color-success)">${c.notas?.length||0} notas</span>
+    </div>`).join('');
+    div.style.display = 'block';
+}
+
+function rellenarClienteNota(c) {
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val||''; };
+    set('clienteNombre',    c.nombre);
+    set('clienteCedula',    c.cedula);
+    set('clienteTelefono',  c.telefono);
+    set('clienteEmail',     c.email);
+    set('clienteDireccion', c.direccion);
+    set('buscarCliente', '');
+    const div = document.getElementById('resultadosCliente');
+    if (div) div.style.display = 'none';
+    showNotification(`✅ Cliente "${c.nombre}" cargado`, 'success');
+}
+
+// Selector de producto desde el catálogo
+function abrirSelectorProducto(btnEl) {
+    const cat = getProductosCatalogo();
+    const todos = [
+        ...( cat.muebleriaInterior  || []),
+        ...( cat.muebleriaExterior  || []),
+        ...( cat.cerrajeriaExterior || [])
+    ];
+    const inputDesc  = btnEl.closest('.form-group').querySelector('.item-descripcion');
+    const inputPrecio = btnEl.closest('.item-row')?.querySelector('.item-precio');
+
+    // Crear modal ligero
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
+    overlay.innerHTML = `
+    <div style="background:#fff;border-radius:12px;max-width:480px;width:100%;max-height:80vh;overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--color-gray-200);display:flex;justify-content:space-between;align-items:center">
+            <strong>📦 Elegir Producto del Catálogo</strong>
+            <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;font-size:1.2rem;cursor:pointer">✕</button>
+        </div>
+        <div style="overflow-y:auto;padding:.5rem">
+            ${todos.map(p => `
+            <div onclick="seleccionarProductoNota(this)"
+                 data-nombre="${p.nombre} (${p.categoria})"
+                 data-precio="${p.precio}"
+                 style="display:flex;align-items:center;gap:.75rem;padding:.75rem;
+                        border-radius:8px;cursor:pointer;margin-bottom:.25rem"
+                 onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background=''">
+                <span style="font-size:1.5rem">${p.imagen||'📦'}</span>
+                <div style="flex:1">
+                    <div style="font-weight:700;font-size:.875rem">${p.nombre}</div>
+                    <div style="font-size:.75rem;color:var(--color-gray-500)">${p.categoria} · desde $${p.precio}</div>
+                </div>
+                <span style="font-weight:700;color:var(--color-primary)">$${p.precio}</span>
+            </div>`).join('')}
+        </div>
+    </div>`;
+    // Guardar referencia a los inputs
+    overlay._inputDesc  = inputDesc;
+    overlay._inputPrecio = inputPrecio;
+    // Event delegation — un solo listener en el overlay
+    overlay.addEventListener('click', (e) => {
+        const item = e.target.closest('[data-nombre]');
+        if (!item) return;
+        const desc   = item.dataset.nombre;
+        const precio = item.dataset.precio;
+        if (inputDesc)   inputDesc.value  = desc;
+        if (inputPrecio && !inputPrecio.value) inputPrecio.value = precio;
+        overlay.remove();
+        actualizarPreview();
+        showNotification('✅ Producto cargado: ' + desc.split('(')[0].trim(), 'success');
+    });
+    document.body.appendChild(overlay);
+}
+
+// ========================================
+// SOPORTE Y QUEJAS
+// ========================================
+function renderSoporte() {
+    return `
+    <div class="fade-in container-small">
+        <div class="page-header text-center">
+            <i data-lucide="headphones" class="page-icon"></i>
+            <h1>Soporte y Atención al Cliente</h1>
+            <p>Estamos aquí para ayudarte con cualquier inconveniente</p>
+        </div>
+
+        <div class="grid grid-2 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="mb-3" style="display:flex;align-items:center;gap:.5rem">
+                        <i data-lucide="headphones"></i> Contacto de Soporte
+                    </h3>
+                    <div class="contacto-info">
+                        <div class="contacto-item">
+                            <i data-lucide="phone"></i>
+                            <div>
+                                <strong>Soporte Técnico</strong>
+                                <p>+593 98 167 6646</p>
+                                <a href="https://wa.me/593981676646" target="_blank" class="btn btn-success mt-1 btn-sm">
+                                    <i data-lucide="message-circle"></i> WhatsApp Soporte
+                                </a>
+                            </div>
+                        </div>
+                        <div class="contacto-item">
+                            <i data-lucide="mail"></i>
+                            <div>
+                                <strong>Email de Soporte</strong>
+                                <a href="mailto:mycbenjaminsoporte@gmail.com"
+                                   style="color:var(--color-primary);font-weight:600">
+                                   mycbenjaminsoporte@gmail.com
+                                </a>
+                            </div>
+                        </div>
+                        <div class="contacto-item">
+                            <i data-lucide="clock"></i>
+                            <div>
+                                <strong>Horario de Soporte</strong>
+                                <p>Lunes a Viernes: 8:00 AM - 6:00 PM</p>
+                                <p>Sábados: 9:00 AM - 2:00 PM</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="mb-3" style="display:flex;align-items:center;gap:.5rem">
+                        <i data-lucide="alert-triangle"></i> Portal de Quejas
+                    </h3>
+                    <p style="font-size:.875rem;color:var(--color-gray-600);margin-bottom:1rem">
+                        ¿Tuviste un problema con tu pedido? Cuéntanos y lo resolveremos en menos de 48 horas.
+                    </p>
+                    <div class="form-group">
+                        <label class="form-label">Número de Nota (opcional)</label>
+                        <input type="text" id="quejaNumNota" class="form-input" placeholder="S 001-001-00-0000001">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tu Nombre *</label>
+                        <input type="text" id="quejaNombre" class="form-input" placeholder="Juan Pérez"
+                            value="${getUser()?.nombre||''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tipo de inconveniente *</label>
+                        <select id="quejaTipo" class="form-select">
+                            <option value="">Selecciona...</option>
+                            <option value="Retraso en entrega">Retraso en entrega</option>
+                            <option value="Calidad del producto">Calidad del producto</option>
+                            <option value="Instalación incorrecta">Instalación incorrecta</option>
+                            <option value="Error en la nota de venta">Error en la nota de venta</option>
+                            <option value="Garantía / reclamo">Garantía / reclamo</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descripción del problema *</label>
+                        <textarea id="quejaDesc" class="form-textarea" rows="4"
+                            placeholder="Describe detalladamente lo que ocurrió..."></textarea>
+                    </div>
+                    <button onclick="enviarQueja()" class="btn btn-primary w-full">
+                        <i data-lucide="send"></i> Enviar Queja / Reclamo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function enviarQueja() {
+    const nombre = document.getElementById('quejaNombre').value.trim();
+    const tipo   = document.getElementById('quejaTipo').value;
+    const desc   = document.getElementById('quejaDesc').value.trim();
+    const nota   = document.getElementById('quejaNumNota').value.trim();
+    if (!nombre || !tipo || !desc) { showNotification('Completa los campos obligatorios', 'error'); return; }
+    const msg = `🚨 *QUEJA / RECLAMO*\n\nNombre: ${nombre}\nTipo: ${tipo}${nota ? '\nNota: '+nota : ''}\n\nDescripción:\n${desc}`;
+    window.open(`https://wa.me/593981676646?text=${encodeURIComponent(msg)}`, '_blank');
+    showNotification('Reclamo enviado. Te responderemos en menos de 48 horas.', 'success');
+}
+
+// ========================================
+// PERFIL — Fondo dinámico por insignia
+// ========================================
+function getGradientInsignia(nivel, esManual) {
+    const gradients = {
+        'Simple':  'linear-gradient(135deg, var(--color-gray-800) 0%, var(--color-gray-700) 100%)',
+        'Premium': 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #1e3a5f 100%)',
+        'Elite':   'linear-gradient(135deg, #1a0533 0%, #7c3aed 30%, #c026d3 70%, #1a0533 100%)',
+    };
+    return gradients[nivel] || gradients['Simple'];
+}
+
+// ========================================
+// CARRITO — WhatsApp robusto
+// ========================================
+function enviarPedidoWhatsApp() {
+    const cart    = getCart();
+    const user    = getUser();
+    const descuento = getDescuentoActual();
+
+    if (!cart || cart.length === 0) {
+        showNotification('Tu carrito está vacío', 'error');
+        return;
+    }
+
+    let mensaje = `¡Hola! Quiero realizar un pedido desde el sitio de Mueblería y Cerrajería "Benjamín":\n\n`;
+    let subtotal = 0;
+
+    cart.forEach((item, i) => {
+        const nombre   = item.nombre  || 'Producto';
+        const cantidad = item.config?.cantidad || item.cantidad || 1;
+        const precio   = item.precioTotal || 0;
+        const color    = item.config?.color    || '—';
+        const material = item.config?.material || '—';
+        const acabado  = item.config?.acabado  || '—';
+        const entrega  = item.config?.tipoEntrega === 'terminada'
+            ? 'Terminada (incluye instalación)' : 'Rústica (retiro en taller)';
+
+        mensaje += `${i+1}. ${cantidad}x ${nombre}\n`;
+        mensaje += `   Color: ${color} | Material: ${material} | Acabado: ${acabado}\n`;
+        mensaje += `   Entrega: ${entrega}\n`;
+        mensaje += `   Subtotal: $${precio.toFixed(2)}\n\n`;
+        subtotal += precio;
+    });
+
+    let total = subtotal;
+    if (descuento > 0) {
+        const ahorro = subtotal * (descuento / 100);
+        total = subtotal - ahorro;
+        mensaje += `Subtotal: $${subtotal.toFixed(2)}\n`;
+        mensaje += `Descuento (${descuento}%): -$${ahorro.toFixed(2)}\n`;
+    }
+    mensaje += `TOTAL APROXIMADO: $${total.toFixed(2)}\n`;
+    mensaje += `\n⚠️ Precio final se confirma según especificaciones exactas.\n`;
+
+    if (user) {
+        mensaje += `\n--- MIS DATOS ---\n`;
+        mensaje += `Nombre: ${user.nombre}\n`;
+        if (user.cedula)    mensaje += `Cédula: ${user.cedula}\n`;
+        if (user.email)     mensaje += `Email: ${user.email}\n`;
+        if (user.telefono)  mensaje += `Teléfono: ${user.telefono}\n`;
+        if (user.direccion) mensaje += `Dirección: ${user.direccion}\n`;
+        if (user.ciudad)    mensaje += `Ciudad: ${user.ciudad}\n`;
+    }
+
+    const url = `https://wa.me/${contactInfo.whatsapp}?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
+
+    // Guardar pedido y limpiar carrito
+    if (typeof savePedido === 'function') {
+        savePedido({ items: cart, total, descuento, mensaje });
+    }
+    if (typeof clearCart === 'function') clearCart();
+
+    showNotification('✅ Redirigiendo a WhatsApp...', 'success');
+}
+
+// ========================================
+// ADMIN — GESTIÓN DE TESTIMONIOS
+// ========================================
+
+function renderAdminTestimonios() {
+    if (!isAdminAuthenticated()) { navigateTo('admin-login'); return ''; }
+
+    const todos  = typeof getTestimoniosDB === 'function' ? getTestimoniosDB() : [];
+    const stats  = typeof getEstadisticasTestimonios === 'function' ? getEstadisticasTestimonios() : {};
+    const filtro = window._filtroTestAdmin || 'pendiente';
+
+    const filtrados = filtro === 'todos' ? todos : todos.filter(t => t.estado === filtro);
+
+    const estadoConfig = {
+        pendiente: { label: 'Pendiente', color: '#eab308', bg: '#fef9c3'  },
+        aprobado:  { label: 'Aprobado',  color: '#10b981', bg: '#dcfce7'  },
+        destacado: { label: 'Destacado', color: '#f59e0b', bg: '#fef3c7'  },
+        rechazado: { label: 'Rechazado', color: '#ef4444', bg: '#fee2e2'  },
+    };
+
+    return `
+    <div class="fade-in">
+        <div class="admin-header">
+            <div>
+                <h1>⭐ Gestión de Testimonios</h1>
+                <p>${stats.total||0} total · 
+                   <span style="color:#eab308">${stats.pendientes||0} pendientes</span> · 
+                   <span style="color:#10b981">${stats.aprobados||0} publicados</span> · 
+                   <span style="color:#f59e0b">${stats.destacados||0} destacados</span> · 
+                   Promedio: ${'★'.repeat(Math.round(parseFloat(stats.promedio||5)))} ${stats.promedio||'—'}
+                </p>
+            </div>
+            <button onclick="navigateTo('admin-panel')" class="btn btn-secondary">
+                <i data-lucide="arrow-left"></i> Panel
+            </button>
+        </div>
+
+        <!-- Filtros -->
+        <div class="flex gap-2 mb-4" style="flex-wrap:wrap">
+            ${['pendiente','aprobado','destacado','rechazado','todos'].map(f => {
+                const ec  = estadoConfig[f] || { label: 'Todos', color: 'var(--color-gray-600)', bg: 'var(--color-gray-100)' };
+                const cnt = f === 'todos' ? todos.length : todos.filter(t => t.estado === f).length;
+                const act = filtro === f;
+                return `<button onclick="filtrarTestAdmin('${f}')"
+                    style="padding:6px 14px;border-radius:20px;border:2px solid ${ec.color};
+                           background:${act ? ec.color : 'transparent'};
+                           color:${act ? '#fff' : ec.color};
+                           font-weight:700;font-size:.8rem;cursor:pointer;transition:all .2s">
+                    ${ec.label||'Todos'} (${cnt})
+                </button>`;
+            }).join('')}
+        </div>
+
+        ${filtrados.length === 0 ? `
+        <div class="alert alert-warning">
+            <i data-lucide="message-square"></i>
+            <p>No hay testimonios en este estado.</p>
+        </div>` : `
+        <div class="grid grid-2" id="gridTestAdmin">
+            ${filtrados.map(t => {
+                const ec     = estadoConfig[t.estado] || estadoConfig.pendiente;
+                const stars  = '★'.repeat(t.calificacion||5) + '☆'.repeat(5-(t.calificacion||5));
+                return `
+                <div class="card" style="border-left:4px solid ${ec.color}">
+                    <div class="card-body">
+                        <!-- Cabecera -->
+                        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem">
+                            <span style="font-size:2rem">${t.imagen||'👤'}</span>
+                            <div style="flex:1">
+                                <strong>${t.nombre}</strong>
+                                <div style="font-size:.75rem;color:var(--color-gray-500)">
+                                    Cédula: ${t.cedula||'—'} · ${new Date(t.fechaEnvio||t.fecha).toLocaleDateString('es-EC')}
+                                </div>
+                            </div>
+                            <span style="background:${ec.bg};color:${ec.color};padding:3px 10px;
+                                border-radius:20px;font-size:.7rem;font-weight:700">
+                                ${ec.label}
+                            </span>
+                        </div>
+
+                        <!-- Calificación y proyecto -->
+                        <div style="color:#f59e0b;font-size:1rem;margin-bottom:.25rem">${stars}</div>
+                        <div style="font-size:.8rem;font-weight:700;color:var(--color-primary);margin-bottom:.5rem">
+                            📦 ${t.proyecto}
+                        </div>
+
+                        <!-- Texto -->
+                        <p style="font-size:.875rem;color:var(--color-gray-700);margin-bottom:.75rem;
+                                  font-style:italic;border-left:3px solid var(--color-gray-200);
+                                  padding-left:.75rem">
+                            "${t.texto}"
+                        </p>
+
+                        ${t.motivoRechazo ? `
+                        <div style="background:#fee2e2;padding:.5rem .75rem;border-radius:6px;
+                                    font-size:.75rem;color:#991b1b;margin-bottom:.5rem">
+                            Motivo rechazo: ${t.motivoRechazo}
+                        </div>` : ''}
+
+                        <!-- Acciones -->
+                        <div class="flex gap-1" style="flex-wrap:wrap">
+                            ${t.estado === 'pendiente' || t.estado === 'rechazado' ? `
+                            <button onclick="adminAccionTestimonio('aprobar',${t.id})"
+                                class="btn btn-success btn-sm">
+                                <i data-lucide="check"></i> Aprobar
+                            </button>` : ''}
+
+                            ${t.estado === 'aprobado' || t.estado === 'destacado' ? `
+                            <button onclick="adminAccionTestimonio('destacar',${t.id})"
+                                style="padding:5px 12px;border-radius:6px;border:2px solid #f59e0b;
+                                       background:${t.estado==='destacado'?'#f59e0b':'transparent'};
+                                       color:${t.estado==='destacado'?'#fff':'#f59e0b'};
+                                       font-weight:700;font-size:.8rem;cursor:pointer">
+                                <i data-lucide="star"></i> ${t.estado==='destacado'?'Quitar destaque':'Destacar'}
+                            </button>` : ''}
+
+                            ${t.estado !== 'rechazado' ? `
+                            <button onclick="adminAccionTestimonio('rechazar',${t.id})"
+                                class="btn btn-secondary btn-sm">
+                                <i data-lucide="x"></i> Rechazar
+                            </button>` : ''}
+
+                            <button onclick="adminAccionTestimonio('eliminar',${t.id})"
+                                class="btn btn-danger btn-sm" style="margin-left:auto">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('')}
+        </div>`}
+    </div>`;
+}
+
+function filtrarTestAdmin(filtro) {
+    window._filtroTestAdmin = filtro;
+    const main = document.getElementById('mainContent');
+    if (main) { main.innerHTML = renderAdminTestimonios(); lucide.createIcons(); }
+}
+
+function adminAccionTestimonio(accion, id) {
+    if (accion === 'aprobar') {
+        adminAprobarTestimonio(id);
+        showNotification('✅ Testimonio aprobado y publicado', 'success');
+    } else if (accion === 'destacar') {
+        adminDestacarTestimonio(id);
+        const t = getTestimoniosDB().find(x => x.id === id);
+        showNotification(t?.estado === 'destacado' ? '⭐ Destacado en la página de inicio' : '↩ Destaque removido', 'success');
+    } else if (accion === 'rechazar') {
+        const motivo = prompt('Motivo del rechazo (opcional):') || 'No cumple los requisitos de publicación';
+        adminRechazarTestimonio(id, motivo);
+        showNotification('Testimonio rechazado', 'info');
+    } else if (accion === 'eliminar') {
+        if (!confirm('¿Eliminar este testimonio? No se puede deshacer.')) return;
+        adminEliminarTestimonio(id);
+        showNotification('Testimonio eliminado', 'info');
+    }
+    filtrarTestAdmin(window._filtroTestAdmin || 'pendiente');
+}
+
+// ========================================
+// ADMIN — SEGUIMIENTO DE PEDIDOS
+// ========================================
+
+const ESTADOS_PEDIDO = {
+    'por-iniciar': { label: 'Por iniciar', color: '#94a3b8', bg: '#f1f5f9', icon: '📋', siguiente: 'en-proceso'  },
+    'en-proceso':  { label: 'En proceso',  color: '#f59e0b', bg: '#fef9c3', icon: '🔨', siguiente: 'listo'       },
+    'listo':       { label: 'Listo',       color: '#10b981', bg: '#dcfce7', icon: '✅', siguiente: 'entregado'   },
+    'entregado':   { label: 'Entregado',   color: '#6366f1', bg: '#ede9fe', icon: '📦', siguiente: null          },
+};
+
+function renderAdminPedidos() {
+    if (!isAdminAuthenticated()) { navigateTo('admin-login'); return ''; }
+
+    const todos     = getPedidos();
+    const filtro    = window._filtroPedidos || 'por-iniciar';
+    const filtrados = filtro === 'todos' ? todos : todos.filter(p => p.estado === filtro);
+
+    // Conteos por estado
+    const conteos = Object.keys(ESTADOS_PEDIDO).reduce((acc, k) => {
+        acc[k] = todos.filter(p => p.estado === k).length;
+        return acc;
+    }, { todos: todos.length });
+
+    // Ordenar: más recientes primero
+    const ordenados = [...filtrados].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+    return `
+    <div class="fade-in">
+        <div class="admin-header">
+            <div>
+                <h1>📦 Seguimiento de Pedidos</h1>
+                <p>${todos.length} pedidos totales ·
+                   <span style="color:#f59e0b">${conteos['por-iniciar']} por iniciar</span> ·
+                   <span style="color:#f59e0b">${conteos['en-proceso']} en proceso</span> ·
+                   <span style="color:#10b981">${conteos['listo']} listos</span> ·
+                   <span style="color:#6366f1">${conteos['entregado']} entregados</span>
+                </p>
+            </div>
+            <button onclick="navigateTo('admin-panel')" class="btn btn-secondary">
+                <i data-lucide="arrow-left"></i> Panel
+            </button>
+        </div>
+
+        <!-- Filtros por estado -->
+        <div class="flex gap-2 mb-4" style="flex-wrap:wrap">
+            ${[['todos','Todos',conteos.todos,'#64748b'],
+               ...Object.entries(ESTADOS_PEDIDO).map(([k,v]) => [k, v.label, conteos[k], v.color])
+              ].map(([k, label, cnt, color]) => {
+                const act = filtro === k;
+                return `<button onclick="filtrarPedidosAdmin('${k}')"
+                    style="padding:6px 16px;border-radius:20px;border:2px solid ${color};
+                           background:${act ? color : 'transparent'};
+                           color:${act ? '#fff' : color};
+                           font-weight:700;font-size:.8rem;cursor:pointer;transition:all .2s">
+                    ${ESTADOS_PEDIDO[k]?.icon||'📦'} ${label} (${cnt})
+                </button>`;
+              }).join('')}
+        </div>
+
+        ${ordenados.length === 0 ? `
+        <div class="alert alert-warning">
+            <i data-lucide="package"></i>
+            <p>No hay pedidos en este estado.</p>
+        </div>` : `
+        <div style="display:grid;gap:1rem">
+            ${ordenados.map(p => _renderPedidoAdminCard(p)).join('')}
+        </div>`}
+    </div>`;
+}
+
+function _renderPedidoAdminCard(p) {
+    const ep      = ESTADOS_PEDIDO[p.estado] || ESTADOS_PEDIDO['por-iniciar'];
+    const pasos   = Object.keys(ESTADOS_PEDIDO);
+    const idxAct  = pasos.indexOf(p.estado);
+    const puedeAvanzar = ep.siguiente !== null;
+
+    // Calcular número de pedido secuencial por email
+    const todosDe = getPedidos().filter(x => x.usuario === p.usuario)
+                                .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+    const numPedido = todosDe.findIndex(x => x.id === p.id) + 1;
+
+    const items = (p.items || []);
+    const total = p.total || items.reduce((s, i) => s + (i.precioTotal || 0), 0);
+
+    return `
+    <div class="card" style="border-left:5px solid ${ep.color}">
+        <div class="card-body">
+            <!-- Cabecera -->
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;
+                        gap:1rem;flex-wrap:wrap;margin-bottom:1rem">
+                <div>
+                    <div style="display:flex;align-items:center;gap:.75rem">
+                        <strong style="font-size:1rem">Pedido #${numPedido}</strong>
+                        <span style="background:${ep.bg};color:${ep.color};padding:3px 12px;
+                            border-radius:20px;font-size:.75rem;font-weight:700">
+                            ${ep.icon} ${ep.label}
+                        </span>
+                    </div>
+                    <div style="font-size:.8rem;color:var(--color-gray-500);margin-top:.25rem">
+                        👤 ${p.usuario||'—'} ·
+                        📅 ${new Date(p.fecha).toLocaleDateString('es-EC',{day:'2-digit',month:'short',year:'numeric'})}
+                        ${p.ultimaActualizacion
+                            ? ' · Actualizado: '+new Date(p.ultimaActualizacion).toLocaleDateString('es-EC')
+                            : ''}
+                    </div>
+                </div>
+                <div style="font-size:1.25rem;font-weight:900;color:var(--color-primary)">
+                    $${total.toFixed(2)}
+                </div>
+            </div>
+
+            <!-- Barra de progreso visual -->
+            <div style="display:flex;gap:0;margin-bottom:1.25rem">
+                ${pasos.map((paso, j) => {
+                    const ep2   = ESTADOS_PEDIDO[paso];
+                    const activo   = j <= idxAct;
+                    const current  = j === idxAct;
+                    return `
+                    <div style="flex:1;text-align:center">
+                        <div style="height:6px;background:${activo ? ep.color : '#e2e8f0'};
+                            ${j===0?'border-radius:6px 0 0 6px':''}
+                            ${j===pasos.length-1?'border-radius:0 6px 6px 0':''}
+                            transition:background .4s"></div>
+                        <div style="margin-top:.35rem;font-size:.65rem;
+                            color:${current ? ep.color : activo ? '#64748b' : 'var(--color-gray-300)'};
+                            font-weight:${current ? '900' : '400'}">
+                            ${ep2.icon} ${ep2.label}
+                        </div>
+                    </div>`;
+                }).join('')}
+            </div>
+
+            <!-- Items del pedido -->
+            <div style="background:var(--color-gray-50);border-radius:8px;padding:.75rem;margin-bottom:1rem">
+                ${items.length > 0
+                    ? items.map(it => `
+                        <div style="display:flex;justify-content:space-between;
+                                    font-size:.8rem;padding:.2rem 0;
+                                    border-bottom:1px solid var(--color-gray-200)">
+                            <span>${it.config?.cantidad||it.cantidad||1}x <strong>${it.nombre||'Producto'}</strong>
+                                ${it.config?.color ? ' · '+it.config.color : ''}
+                                ${it.config?.material ? ' · '+it.config.material : ''}
+                            </span>
+                            <span style="font-weight:700">$${(it.precioTotal||0).toFixed(2)}</span>
+                        </div>`).join('')
+                    : `<p style="font-size:.8rem;color:var(--color-gray-500);margin:0">Sin detalle de items</p>`}
+                ${p.descuento > 0 ? `
+                <div style="font-size:.8rem;color:var(--color-success);text-align:right;margin-top:.25rem">
+                    Descuento aplicado: -$${(p.descuento||0).toFixed(2)}
+                </div>` : ''}
+            </div>
+
+            <!-- Acciones de seguimiento -->
+            <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center">
+                ${puedeAvanzar ? `
+                <button onclick="avanzarEstadoPedido('${p.id}')"
+                    style="flex:1;min-width:180px;padding:10px 16px;border-radius:8px;border:none;
+                           background:${ESTADOS_PEDIDO[ep.siguiente].color};color:#fff;
+                           font-weight:700;font-size:.875rem;cursor:pointer;
+                           display:flex;align-items:center;justify-content:center;gap:.5rem;
+                           transition:opacity .2s"
+                    onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                    <span>${ESTADOS_PEDIDO[ep.siguiente].icon}</span>
+                    Marcar como: ${ESTADOS_PEDIDO[ep.siguiente].label}
+                    <i data-lucide="chevron-right" style="width:16px;height:16px"></i>
+                </button>` : `
+                <span style="flex:1;text-align:center;color:var(--color-success);
+                    font-weight:700;font-size:.875rem">
+                    ✅ Pedido completado
+                </span>`}
+
+                <button onclick="cambiarEstadoPedidoModal('${p.id}')"
+                    class="btn btn-secondary btn-sm" title="Cambiar a cualquier estado">
+                    <i data-lucide="refresh-cw"></i> Estado
+                </button>
+
+                <a href="https://wa.me/${p.usuario?.replace(/[^0-9]/g,'')||contactInfo?.whatsapp}?text=${encodeURIComponent('Hola '+p.usuario+', tu pedido #'+numPedido+' ahora está: '+ep.label+' '+ep.icon)}"
+                   target="_blank" class="btn btn-secondary btn-sm" title="Notificar por WhatsApp">
+                    <i data-lucide="message-circle"></i> Notificar
+                </a>
+            </div>
+
+            ${p.notaAdmin ? `
+            <div style="margin-top:.75rem;background:#fef3c7;padding:.5rem .75rem;
+                        border-radius:6px;font-size:.8rem">
+                📝 <strong>Nota:</strong> ${p.notaAdmin}
+            </div>` : ''}
+
+            <!-- Campo para nota interna -->
+            <div style="margin-top:.75rem;display:flex;gap:.5rem">
+                <input type="text" id="nota_${p.id}" class="form-input"
+                    style="font-size:.8rem;padding:.4rem .75rem"
+                    placeholder="Añadir nota interna (visible solo para ti)..."
+                    value="${p.notaAdmin||''}">
+                <button onclick="guardarNotaPedido('${p.id}')"
+                    class="btn btn-secondary btn-sm" title="Guardar nota">
+                    <i data-lucide="save"></i>
+                </button>
+            </div>
+        </div>
+    </div>`;
+}
+
+// ── Avanzar al siguiente estado ──────────────────────────────
+function avanzarEstadoPedido(id) {
+    const pedidos = getPedidos();
+    const idx     = pedidos.findIndex(p => String(p.id) === String(id));
+    if (idx === -1) { showNotification('Pedido no encontrado', 'error'); return; }
+
+    const estadoActual = pedidos[idx].estado || 'por-iniciar';
+    const ep           = ESTADOS_PEDIDO[estadoActual];
+    if (!ep?.siguiente) { showNotification('El pedido ya está en el estado final', 'info'); return; }
+
+    pedidos[idx].estado              = ep.siguiente;
+    pedidos[idx].ultimaActualizacion = new Date().toISOString();
+    pedidos[idx][`fecha_${ep.siguiente.replace('-','_')}`] = new Date().toISOString();
+    localStorage.setItem('benjaminPedidos', JSON.stringify(pedidos));
+
+    const epNuevo = ESTADOS_PEDIDO[ep.siguiente];
+    showNotification(`${epNuevo.icon} Pedido actualizado: ${epNuevo.label}`, 'success');
+    filtrarPedidosAdmin(window._filtroPedidos || 'por-iniciar');
+}
+
+// ── Cambiar a cualquier estado (modal) ───────────────────────
+function cambiarEstadoPedidoModal(id) {
+    const pedidos = getPedidos();
+    const p = pedidos.find(x => String(x.id) === String(id));
+    if (!p) return;
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
+    overlay.innerHTML = `
+    <div style="background:#fff;border-radius:12px;max-width:360px;width:100%;padding:1.5rem">
+        <h3 style="margin-bottom:1rem">Cambiar estado del pedido</h3>
+        <div style="display:grid;gap:.5rem">
+            ${Object.entries(ESTADOS_PEDIDO).map(([k, v]) => `
+            <button onclick="setEstadoPedidoDirecto('${id}','${k}');this.closest('[style*=fixed]').remove()"
+                style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;
+                       border-radius:8px;border:2px solid ${p.estado===k?v.color:'#e5e7eb'};
+                       background:${p.estado===k?v.bg:'transparent'};cursor:pointer;
+                       font-weight:${p.estado===k?'700':'400'}">
+                <span style="font-size:1.2rem">${v.icon}</span>
+                <span>${v.label}</span>
+                ${p.estado===k?'<span style="margin-left:auto;font-size:.75rem;color:'+v.color+'">← actual</span>':''}
+            </button>`).join('')}
+        </div>
+        <button onclick="this.closest('[style*=fixed]').remove()"
+            class="btn btn-secondary w-full mt-3">Cancelar</button>
+    </div>`;
+    document.body.appendChild(overlay);
+    lucide.createIcons();
+}
+
+function setEstadoPedidoDirecto(id, nuevoEstado) {
+    const pedidos = getPedidos();
+    const idx     = pedidos.findIndex(p => String(p.id) === String(id));
+    if (idx === -1) return;
+    pedidos[idx].estado              = nuevoEstado;
+    pedidos[idx].ultimaActualizacion = new Date().toISOString();
+    localStorage.setItem('benjaminPedidos', JSON.stringify(pedidos));
+    const ep = ESTADOS_PEDIDO[nuevoEstado];
+    showNotification(`${ep.icon} Estado actualizado: ${ep.label}`, 'success');
+    filtrarPedidosAdmin(window._filtroPedidos || 'todos');
+}
+
+// ── Guardar nota interna ──────────────────────────────────────
+function guardarNotaPedido(id) {
+    const nota    = document.getElementById('nota_'+id)?.value.trim() || '';
+    const pedidos = getPedidos();
+    const idx     = pedidos.findIndex(p => String(p.id) === String(id));
+    if (idx === -1) return;
+    pedidos[idx].notaAdmin = nota;
+    localStorage.setItem('benjaminPedidos', JSON.stringify(pedidos));
+    showNotification('✅ Nota guardada', 'success');
+}
+
+// ── Filtrar ───────────────────────────────────────────────────
+function filtrarPedidosAdmin(filtro) {
+    window._filtroPedidos = filtro;
+    const main = document.getElementById('mainContent');
+    if (main) { main.innerHTML = renderAdminPedidos(); lucide.createIcons(); }
+}
+
+// ========================================
+// GESTIÓN DE CLIENTES REGISTRADOS
+// Tabla separada de la de notas de venta
+// ========================================
+
+function _registrarClienteEnDB(user) {
+    const lista = _getClientesRegistrados();
+    const clave = user.cedula || user.email;
+    if (!clave) return;
+    const existeIdx = lista.findIndex(c => (c.cedula && c.cedula === user.cedula) || c.email === user.email);
+    const entrada = {
+        cedula:       user.cedula || '',
+        nombre:       user.nombre || '',
+        email:        user.email  || '',
+        telefono:     user.telefono || '',
+        direccion:    user.direccion || '',
+        ciudad:       user.ciudad || 'Quito',
+        fechaRegistro: user.fechaRegistro || new Date().toISOString(),
+        fuente:       'registro_web'
+    };
+    if (existeIdx >= 0) {
+        lista[existeIdx] = { ...lista[existeIdx], ...entrada };
+    } else {
+        lista.push(entrada);
+    }
+    localStorage.setItem('clientesRegistrados', JSON.stringify(lista));
+}
+
+function _getClientesRegistrados() {
+    return JSON.parse(localStorage.getItem('clientesRegistrados') || '[]');
+}
+
+// ── Helpers del formulario de contraseña ────────────────────
+function toggleRegPass(inputId, iconId) {
+    const inp  = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (!inp) return;
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    if (icon) {
+        icon.setAttribute('data-lucide', inp.type === 'password' ? 'eye' : 'eye-off');
+        lucide.createIcons();
+    }
+}
+
+function validarPassReg() {
+    const pass  = document.getElementById('regPass')?.value     || '';
+    const conf  = document.getElementById('regPassConf')?.value || '';
+    const msg   = document.getElementById('passMatchMsg');
+    if (!msg || !conf) return;
+    msg.style.display = 'block';
+    if (pass === conf) {
+        msg.textContent = '✅ Las contraseñas coinciden';
+        msg.style.color = 'var(--color-success)';
+    } else {
+        msg.textContent = '❌ Las contraseñas no coinciden';
+        msg.style.color = 'var(--color-error)';
+    }
 }

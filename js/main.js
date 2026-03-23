@@ -4,6 +4,18 @@
 
 let currentPage = 'inicio';
 
+// ── Sync throttled — máximo 1 vez por minuto ────────────────
+let _ultimoSync = 0;
+async function syncSiEsNecesario(mainContent) {
+    const ahora = Date.now();
+    const MINUTO = 60 * 1000;
+    if (ahora - _ultimoSync < MINUTO) return; // ya sincronizó hace menos de 1 min
+    _ultimoSync = ahora;
+    if (typeof sincronizarDesdeSupabase !== 'function') return;
+    if (mainContent) mainContent.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Cargando datos...</p></div>';
+    await sincronizarDesdeSupabase();
+}
+
 // Navegar a una página
 async function navigateTo(page, param = null) {
     currentPage = page;
@@ -61,41 +73,26 @@ async function navigateTo(page, param = null) {
             break;
         case 'admin-panel':
             // ☁️ Sincronizar con Supabase antes de mostrar admin
-            if (typeof sincronizarDesdeSupabase === 'function') {
-                mainContent.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Cargando datos...</p></div>';
-                await sincronizarDesdeSupabase();
-            }
+            await syncSiEsNecesario(mainContent);
             content = renderAdminPanel();
             break;
         case 'admin-nueva-nota':
             content = renderNuevaNota();
             break;
         case 'admin-historial':
-            if (typeof sincronizarDesdeSupabase === 'function') {
-                mainContent.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Cargando notas...</p></div>';
-                await sincronizarDesdeSupabase();
-            }
+            await syncSiEsNecesario(mainContent);
             content = renderAdminHistorial();
             break;
         case 'admin-productos':
-            if (typeof sincronizarDesdeSupabase === 'function') {
-                mainContent.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Cargando productos...</p></div>';
-                await sincronizarDesdeSupabase();
-            }
+            await syncSiEsNecesario(mainContent);
             content = renderAdminProductos();
             break;
         case 'admin-clientes':
-            if (typeof sincronizarDesdeSupabase === 'function') {
-                mainContent.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Cargando clientes...</p></div>';
-                await sincronizarDesdeSupabase();
-            }
+            await syncSiEsNecesario(mainContent);
             content = renderAdminClientes();
             break;
         case 'admin-estadisticas':
-            if (typeof sincronizarDesdeSupabase === 'function') {
-                mainContent.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Cargando estadísticas...</p></div>';
-                await sincronizarDesdeSupabase();
-            }
+            await syncSiEsNecesario(mainContent);
             content = renderAdminEstadisticas();
             break;
         case 'admin-galeria':
@@ -106,6 +103,18 @@ async function navigateTo(page, param = null) {
             break;
         case 'admin-papelera-clientes':
             content = renderAdminPapeleraClientes();
+            break;
+        case 'soporte':
+            content = renderSoporte();
+            break;
+        case 'verificacion-identidad':
+            content = renderVerificacionIdentidad();
+            break;
+        case 'admin-testimonios':
+            content = renderAdminTestimonios();
+            break;
+        case 'admin-pedidos':
+            content = renderAdminPedidos();
             break;
         case 'blog-detalle':
             content = renderBlogDetalle(param);
@@ -162,7 +171,7 @@ async function initApp() {
         });
     }
 
-    // Sincronizar con Supabase en background (no bloquea la UI)
+    // Sincronizar con Supabase al iniciar (una sola vez)
     if (typeof sincronizarDesdeSupabase === 'function') {
         sincronizarDesdeSupabase().catch(console.warn);
     }

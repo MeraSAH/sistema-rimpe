@@ -12,26 +12,6 @@
     <link rel="stylesheet" href="css/responsive.css">
     
     <style>
-        .admin-footer-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 0.75rem;
-            padding: 7px 14px;
-            background: rgba(180, 83, 9, 0.12);
-            border: 1.5px solid rgba(180, 83, 9, 0.35);
-            border-radius: 8px;
-            color: #b45309;
-            font-size: 0.8rem;
-            font-weight: 700;
-            cursor: pointer;
-            text-decoration: none;
-            transition: background 0.2s, border-color 0.2s;
-        }
-        .admin-footer-btn:hover {
-            background: rgba(180, 83, 9, 0.22);
-            border-color: #b45309;
-        }
         /* atajos de teclado — indicador flotante */
         #kb-hint {
             position: fixed; bottom: 5.5rem; right: 1rem;
@@ -138,6 +118,7 @@
                 <a href="javascript:void(0)" onclick="navigateTo('testimonios'); closeMobileMenu(); return false;">Testimonios</a>
                 <a href="javascript:void(0)" onclick="navigateTo('blog'); closeMobileMenu(); return false;">Blog</a>
                 <a href="javascript:void(0)" onclick="navigateTo('contacto'); closeMobileMenu(); return false;">Contacto</a>
+                <a href="javascript:void(0)" onclick="navigateTo('soporte'); closeMobileMenu(); return false;">Soporte</a>
                 <a href="javascript:void(0)" onclick="navigateTo('perfil'); closeMobileMenu(); return false;">Perfil</a>
                 <a href="javascript:void(0)" onclick="navigateTo('carrito'); closeMobileMenu(); return false;">Carrito (<span id="cartCountMobile">0</span>)</a>
             </nav>
@@ -177,10 +158,7 @@
                     <a href="javascript:void(0)" onclick="navigateTo('sobre-nosotros'); return false;">Sobre Nosotros</a>
                     <a href="javascript:void(0)" onclick="navigateTo('contacto'); return false;">Contacto</a>
                     <a href="javascript:void(0)" onclick="navigateTo('perfil'); return false;">Perfil</a>
-                    <a href="javascript:void(0)" onclick="navigateTo('admin-login'); return false;"
-                       class="admin-footer-btn">
-                       🔐 Acceso Administrador
-                    </a>
+                    <a href="javascript:void(0)" onclick="navigateTo('soporte'); return false;">Soporte & Quejas</a>
                 </div>
                 
                 <div class="footer-section">
@@ -231,6 +209,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <!-- Scripts -->
+    <script src="js/verificacion.js"></script>
+    <script src="js/testimonios.js"></script>
     <script src="js/images.js"></script>
     <script src="js/supabase.js"></script>
     <script src="js/data.js"></script>

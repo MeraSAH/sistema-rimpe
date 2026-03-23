@@ -2225,3 +2225,118 @@
     .admin-panel-grid { grid-template-columns: 1fr 1fr; }
     .auth-tabs .auth-tab { font-size: .8rem; padding: 8px 10px; }
 }
+
+/* ── Fondo perfil por nivel de insignia ── */
+.perfil-header {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: var(--color-white);
+    padding: 2.5rem;
+    border-radius: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    transition: background 0.5s ease;
+}
+.perfil-premium {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 40%, #3b82f6 60%, #1e3a5f 100%) !important;
+    box-shadow: 0 0 30px rgba(37,99,235,.4);
+}
+.perfil-elite {
+    background: linear-gradient(135deg, #1a0533 0%, #7c3aed 30%, #c026d3 60%, #9333ea 80%, #1a0533 100%) !important;
+    box-shadow: 0 0 40px rgba(192,38,211,.5);
+    animation: eliteGlow 3s ease-in-out infinite alternate;
+}
+@keyframes eliteGlow {
+    from { box-shadow: 0 0 30px rgba(192,38,211,.4); }
+    to   { box-shadow: 0 0 60px rgba(139,92,246,.7); }
+}
+
+/* ── Perfil: tabs ──────────────────────────────────────────── */
+.perfil-tabs {
+    display: flex;
+    background: var(--color-gray-100);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+}
+.perfil-tab {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    font-weight: 700;
+    font-size: .8rem;
+    cursor: pointer;
+    color: var(--color-gray-600);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    transition: all .2s;
+    position: relative;
+    white-space: nowrap;
+}
+.perfil-tab.active {
+    background: var(--color-white);
+    color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+.perfil-tab svg { width: 14px; height: 14px; }
+.perfil-panel { animation: fadeIn .3s ease; }
+.tab-badge {
+    background: var(--color-primary);
+    color: #fff;
+    border-radius: 20px;
+    padding: 0 6px;
+    font-size: .65rem;
+    font-weight: 800;
+    min-width: 16px;
+    text-align: center;
+}
+
+/* ── Verificación de identidad: pasos ─────────────────────── */
+.verif-step {
+    background: var(--color-white);
+    border: 2px solid var(--color-gray-200);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    transition: all .3s;
+}
+.verif-step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+.verif-step-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: #fff;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: .875rem;
+}
+.verif-step-header > div { flex: 1; }
+.verif-step-header h3 { font-size: 1rem; margin-bottom: .2rem; }
+.verif-step-header p  { font-size: .8rem; color: var(--color-gray-600); margin: 0; }
+.verif-badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: .7rem;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.verif-pendiente { background: #fef3c7; color: #92400e; }
+.verif-ok        { background: #dcfce7; color: #166534; }
+.verif-error     { background: #fee2e2; color: #991b1b; }

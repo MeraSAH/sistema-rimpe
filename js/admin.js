@@ -137,17 +137,38 @@ function deleteProductoAdmin(categoria, id) {
 // ========================================
 
 function getClientesList() {
+    // 1. Clientes con notas de venta
     const notas = getNotasVenta();
-    const map = {};
+    const map   = {};
     notas.forEach(nota => {
-        const ced = nota.cliente.cedula;
-        if (!map[ced]) {
-            map[ced] = { ...nota.cliente, notas: [], totalFacturado: 0 };
-        }
+        const ced = nota.cliente?.cedula || nota.cliente?.email || 'sin-cedula';
+        if (!map[ced]) map[ced] = { ...nota.cliente, notas: [], totalFacturado: 0 };
         map[ced].notas.push(nota);
         map[ced].totalFacturado += nota.total || 0;
     });
-    return Object.values(map).sort((a, b) => b.totalFacturado - a.totalFacturado);
+
+    // 2. Clientes registrados en la web (sin nota aún)
+    const registrados = JSON.parse(localStorage.getItem('clientesRegistrados') || '[]');
+    registrados.forEach(c => {
+        const clave = c.cedula || c.email || 'sin-cedula';
+        if (!map[clave]) {
+            // No tiene notas aún — añadirlo igual
+            map[clave] = { ...c, notas: [], totalFacturado: 0 };
+        } else {
+            // Ya existe por notas, enriquecer con datos de registro
+            map[clave] = { ...map[clave], ...c,
+                notas:          map[clave].notas,
+                totalFacturado: map[clave].totalFacturado };
+        }
+    });
+
+    // Filtrar ocultos / eliminados permanentes
+    const ocultos = JSON.parse(localStorage.getItem('clientesOcultos')    || '[]');
+    const negra   = JSON.parse(localStorage.getItem('clientesOcultosPerm') || '[]');
+
+    return Object.values(map)
+        .filter(c => !ocultos.includes(c.cedula||c.email) && !negra.includes(c.cedula||c.email))
+        .sort((a, b) => b.totalFacturado - a.totalFacturado);
 }
 
 // ========================================
@@ -597,4 +618,15 @@ function generarReporteMensualPDF(mes, año) {
 </div>
 </body></html>`;
     const w = window.open('','_blank'); w.document.write(html); w.document.close();
+}
+
+// ── Admin: aprobar verificación manual de cliente ─────────────────────────────
+// Llamar desde el panel de clientes cuando el admin revisa la cédula por WhatsApp
+function aprobarVerificacionCliente(cedula, nombre) {
+    // Guardar en una lista de verificaciones aprobadas
+    const aprobadas = JSON.parse(localStorage.getItem('verificacionesAprobadas') || '{}');
+    aprobadas[cedula] = { aprobado: true, fecha: new Date().toISOString(), aprobadoPor: 'admin' };
+    localStorage.setItem('verificacionesAprobadas', JSON.stringify(aprobadas));
+    showNotification(`✅ Verificación de ${nombre} aprobada`, 'success');
+    navigateTo('admin-clientes');
 }

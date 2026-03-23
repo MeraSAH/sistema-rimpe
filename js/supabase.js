@@ -43,6 +43,29 @@ function mostrarEstadoSync(estado) {
 // NOTAS DE VENTA — CRUD ASYNC
 // ========================================
 
+// Normalizar fila de Supabase (snake_case) a camelCase para el frontend
+function _rowToNota(row) {
+    return {
+        id:                   row.id,
+        numeroNota:           row.numero_nota          || row.numeroNota          || '—',
+        secuencial:           row.secuencial,
+        fecha:                row.fecha,
+        fechaEmision:         row.fecha_emision        || row.fechaEmision        || '—',
+        cliente:              row.cliente              || {},
+        items:                row.items                || [],
+        subtotal:             row.subtotal             || 0,
+        descuento:            row.descuento            || 0,
+        total:                row.total                || 0,
+        estado:               row.estado               || 'pendiente',
+        observaciones:        row.observaciones        || '',
+        montoPagado:          row.monto_pagado         || row.montoPagado         || 0,
+        abonos:               row.abonos               || [],
+        regimen:              row.regimen              || 'RIMPE - Negocio Popular',
+        ultimaActualizacion:  row.ultima_actualizacion || row.ultimaActualizacion || null,
+        created_at:           row.created_at
+    };
+}
+
 async function dbGetNotas() {
     const db = getDB();
     if (!db || !isSupabaseConfigured()) return _notasLocal();
@@ -54,9 +77,11 @@ async function dbGetNotas() {
             .select('*')
             .order('secuencial', { ascending: false });
         if (error) throw error;
-        localStorage.setItem('notasVenta', JSON.stringify(data));
+        // Normalizar a camelCase antes de guardar en localStorage
+        const normalizadas = data.map(_rowToNota);
+        localStorage.setItem('notasVenta', JSON.stringify(normalizadas));
         mostrarEstadoSync('ok');
-        return data;
+        return normalizadas;
     } catch (e) {
         console.warn('Supabase offline:', e.message);
         mostrarEstadoSync('error');
@@ -463,4 +488,106 @@ async function supabaseResetPassword(email) {
         redirectTo: window.location.origin
     });
     return { ok: !error, error: error?.message };
+}
+
+// ========================================
+// AUTH DE CLIENTE (público)
+// Separado del auth de admin
+// ========================================
+
+// Registrar nuevo cliente
+async function clienteRegister(email, password, perfil) {
+    const db = getDB();
+    if (!db || !isSupabaseConfigured()) {
+        // Fallback: guardar solo local
+        localStorage.setItem('benjaminUser', JSON.stringify({
+            ...perfil, email, compras: 0,
+            fechaRegistro: new Date().toISOString(), pedidos: []
+        }));
+        return { ok: true, local: true };
+    }
+    try {
+        const { data, error } = await db.auth.signUp({
+            email, password,
+            options: {
+                emailRedirectTo: window.location.origin,
+                data: { nombre: perfil.nombre, telefono: perfil.telefono,
+                        cedula: perfil.cedula || '',
+                        direccion: perfil.direccion, ciudad: perfil.ciudad,
+                        referencia: perfil.referencia, rol: 'cliente' }
+            }
+        });
+        if (error) return { ok: false, error: error.message };
+
+        // Guardar perfil ampliado local inmediatamente (no esperar confirmación)
+        const userLocal = { ...perfil, email, compras: 0,
+            fechaRegistro: new Date().toISOString(), pedidos: [],
+            supabaseId: data.user?.id };
+        localStorage.setItem('benjaminUser', JSON.stringify(userLocal));
+        // Registrar en tabla de clientes para que aparezca en el admin
+        if (typeof _registrarClienteEnDB === 'function') _registrarClienteEnDB(userLocal);
+        return { ok: true, user: data.user, confirmacionRequerida: false };
+    } catch (e) {
+        return { ok: false, error: e.message };
+    }
+}
+
+// Login de cliente
+async function clienteLogin(email, password) {
+    const db = getDB();
+    if (!db || !isSupabaseConfigured()) return { ok: false, error: 'Sin conexión' };
+    try {
+        const { data, error } = await db.auth.signInWithPassword({ email, password });
+        if (error) return { ok: false, error: error.message };
+
+        // Restaurar o crear perfil local
+        let perfil = JSON.parse(localStorage.getItem('benjaminUser') || 'null');
+        if (!perfil || perfil.email !== email) {
+            // Construir desde metadata de Supabase
+            const meta = data.user.user_metadata || {};
+            perfil = {
+                nombre:    meta.nombre    || email.split('@')[0],
+                email,
+                telefono:  meta.telefono  || '',
+                direccion: meta.direccion || '',
+                ciudad:    meta.ciudad    || 'Quito',
+                referencia:meta.referencia|| '',
+                compras:   meta.compras   || 0,
+                fechaRegistro: data.user.created_at,
+                pedidos:   [],
+                supabaseId: data.user.id
+            };
+            localStorage.setItem('benjaminUser', JSON.stringify(perfil));
+        }
+        return { ok: true, user: data.user };
+    } catch (e) {
+        return { ok: false, error: e.message };
+    }
+}
+
+// Logout de cliente
+async function clienteLogout() {
+    const db = getDB();
+    // Solo cerrar sesión Supabase si NO es el admin
+    if (db && isSupabaseConfigured()) {
+        const { data } = await db.auth.getSession();
+        const rol = data?.session?.user?.user_metadata?.rol;
+        if (rol === 'cliente') await db.auth.signOut();
+    }
+    localStorage.removeItem('benjaminUser');
+}
+
+// Recuperar contraseña cliente
+async function clienteResetPassword(email) {
+    const db = getDB();
+    if (!db || !isSupabaseConfigured()) return { ok: false };
+    const { error } = await db.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/#perfil'
+    });
+    return { ok: !error, error: error?.message };
+}
+
+// Obtener sesión activa de cliente (≠ admin)
+function getClienteSession() {
+    return JSON.parse(localStorage.getItem('benjaminUser') || 'null');
 }

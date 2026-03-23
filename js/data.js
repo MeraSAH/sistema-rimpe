@@ -458,35 +458,10 @@ const infoNegocio = {
 // TESTIMONIOS
 // ========================================
 
-const testimonios = [
-    {
-        id: 1,
-        nombre: 'María Rodríguez',
-        proyecto: 'Puerta de Tol Residencial',
-        calificacion: 5,
-        texto: 'Excelente trabajo en la puerta de seguridad. La soldadura es impecable y la instalación fue perfecta.',
-        fecha: '2024-11',
-        imagen: '👩'
-    },
-    {
-        id: 2,
-        nombre: 'Carlos Mendoza',
-        proyecto: 'Techo Metálico Comercial',
-        calificacion: 5,
-        texto: 'Construyeron el techo de mi local comercial. Trabajo de primera, muy profesionales.',
-        fecha: '2024-10',
-        imagen: '👨'
-    },
-    {
-        id: 3,
-        nombre: 'Ana Flores',
-        proyecto: 'Cerramiento Perimetral',
-        calificacion: 5,
-        texto: 'El cerramiento quedó excelente. Estructura sólida y buen acabado.',
-        fecha: '2024-12',
-        imagen: '👩'
-    }
-];
+// Testimonios de ejemplo — se muestran solo si no hay testimonios aprobados en la BD
+// Para eliminarlos del sitio: el admin puede gestionar todos los testimonios desde
+// Admin → Testimonios (los de la BD tienen prioridad sobre estos)
+const testimonios = [];
 
 // ========================================
 // GALERÍA DE PROYECTOS
