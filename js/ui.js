@@ -1,314 +1,397 @@
 // ========================================
-// COMPONENTES DE UI — v2.0
+// COMPONENTES DE UI
 // ========================================
 
-// ─── Imagen de producto (URL o emoji fallback) ────────────────────────────────
-function renderProductImg(producto, size = '100%') {
-    if (producto.imagenUrl && producto.imagenUrl.trim()) {
-        return `<img src="${producto.imagenUrl}" alt="${producto.nombre}"
-            style="width:${size};height:180px;object-fit:cover;border-radius:10px 10px 0 0;display:block"
-            onerror="this.style.display='none';this.nextSibling.style.display='flex'">
-            <div style="display:none;font-size:3.5rem;height:180px;align-items:center;
-                justify-content:center;background:var(--color-gray-100);
-                border-radius:10px 10px 0 0">${producto.imagen || '📦'}</div>`;
-    }
-    return `<div style="font-size:3.5rem;height:180px;display:flex;align-items:center;
-        justify-content:center;background:linear-gradient(135deg,#fef3c7,#fde68a);
-        border-radius:10px 10px 0 0">${producto.imagen || '📦'}</div>`;
-}
-
-// ─── Chip de color con código ─────────────────────────────────────────────────
-function renderColorChip(codigo) {
-    const info = (typeof codigosColor !== 'undefined' && codigosColor[codigo])
-        ? codigosColor[codigo]
-        : { nombre: codigo, hex: '#d1d5db' };
-    return `<span title="${codigo}: ${info.nombre}"
-        style="display:inline-flex;align-items:center;gap:4px;
-               background:var(--color-gray-100);border:1px solid var(--color-gray-200);
-               border-radius:20px;padding:2px 8px;font-size:.7rem;font-weight:700;
-               color:var(--color-gray-700);cursor:default">
-        <span style="width:10px;height:10px;border-radius:50%;background:${info.hex};
-            border:1px solid rgba(0,0,0,.15);flex-shrink:0"></span>
-        ${codigo}
-    </span>`;
-}
-
-// ─── Tarjeta de producto ──────────────────────────────────────────────────────
+// Crear tarjeta de producto
 function createProductCard(producto) {
-    const colores = (producto.colores || []);
     return `
-    <div class="card product-card" style="overflow:hidden">
-        ${renderProductImg(producto)}
-        <div class="card-body">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;margin-bottom:.5rem">
-                <div>
-                    <h3 style="font-size:1rem;margin:0 0 2px">${producto.nombre}</h3>
-                    <span style="font-size:.7rem;color:var(--color-gray-500);font-weight:700;
-                        letter-spacing:.5px">${producto.codigo || ''}</span>
+        <div class="card product-card">
+            <div class="card-header">
+                <div class="product-icon">${producto.imagen}</div>
+                <h3>${producto.nombre}</h3>
+                <p class="product-category">${producto.categoria}</p>
+            </div>
+            <div class="card-body">
+                <div class="product-price">
+                    $<span id="price-${producto.id}">135</span>
+                    <span class="price-label">aprox.</span>
                 </div>
-                <span style="font-size:.7rem;background:var(--color-primary);color:#fff;
-                    padding:2px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0">
-                    ${producto.categoria}</span>
-            </div>
 
-            <div class="product-price">
-                $<span id="price-${producto.id}">${producto.precio}</span>
-                <span class="price-label">desde</span>
-            </div>
-
-            <!-- Colores con chips de código -->
-            <div class="form-group">
-                <label class="form-label">Color <small style="color:var(--color-gray-400)">(código)</small></label>
-                <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px" id="colorChips-${producto.id}">
-                    ${colores.map(c => renderColorChip(c)).join('')}
+                <div class="form-group">
+                    <label class="form-label">Cantidad:</label>
+                    <input type="number" id="cantidad-${producto.id}" class="form-input" value="1" min="1" onchange="updateProductPrice(${producto.id})">
                 </div>
-                <select id="color-${producto.id}" class="form-select" style="font-size:.8rem">
-                    ${colores.map(c => {
-                        const info = (typeof codigosColor !== 'undefined' && codigosColor[c])
-                            ? codigosColor[c] : { nombre: c };
-                        return `<option value="${c}">${c} — ${info.nombre}</option>`;
-                    }).join('')}
-                </select>
-            </div>
 
-            <div class="form-group">
-                <label class="form-label">Acabado:</label>
-                <select id="acabado-${producto.id}" class="form-select">
-                    ${(producto.acabados || []).map(a => `<option value="${a}">${a}</option>`).join('')}
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Material:</label>
-                <select id="material-${producto.id}" class="form-select">
-                    ${(producto.materiales || []).map(m => `<option value="${m}">${m}</option>`).join('')}
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Cantidad:</label>
-                <input type="number" id="cantidad-${producto.id}" class="form-input"
-                    value="1" min="1" onchange="updateProductPrice(${producto.id})">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Tipo de Entrega:</label>
-                <div class="radio-group">
-                    <label class="radio-option">
-                        <input type="radio" name="entrega-${producto.id}" value="terminada"
-                            checked onchange="updateProductPrice(${producto.id})">
-                        <div class="radio-content">
-                            <strong>Terminada</strong>
-                            <small>Incluye instalación + toma medidas</small>
-                        </div>
-                    </label>
-                    <label class="radio-option">
-                        <input type="radio" name="entrega-${producto.id}" value="rustica"
-                            onchange="updateProductPrice(${producto.id})">
-                        <div class="radio-content">
-                            <strong>Rústica (-15%)</strong>
-                            <small>Retiro en taller, sin instalación</small>
-                        </div>
-                    </label>
+                <div class="form-group">
+                    <label class="form-label">Color:</label>
+                    <select id="color-${producto.id}" class="form-select">
+                        ${producto.colores.map(c => `<option value="${c}">${c}</option>`).join('')}
+                    </select>
                 </div>
-            </div>
 
-            <div class="flex gap-2 mt-2">
-                <button onclick="addProductToCart(${producto.id})" class="btn btn-primary" style="flex:1">
-                    <i data-lucide="shopping-cart"></i> Al Carrito
-                </button>
-                <button onclick="cotizarProducto(${producto.id})" class="btn btn-secondary">
-                    <i data-lucide="message-circle"></i>
+                <div class="form-group">
+                    <label class="form-label">Acabado:</label>
+                    <select id="acabado-${producto.id}" class="form-select">
+                        ${producto.acabados.map(a => `<option value="${a}">${a}</option>`).join('')}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Material:</label>
+                    <select id="material-${producto.id}" class="form-select">
+                        ${producto.materiales.map(m => `<option value="${m}">${m}</option>`).join('')}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tipo de Entrega:</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="entrega-${producto.id}" value="terminada" checked onchange="updateProductPrice(${producto.id})">
+                            <div class="radio-content">
+                                <strong>Terminada</strong>
+                                <small>Incluye instalación + toma medidas</small>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="entrega-${producto.id}" value="rustica" onchange="updateProductPrice(${producto.id})">
+                            <div class="radio-content">
+                                <strong>Rústica (-15%)</strong>
+                                <small>Retiro en taller, sin instalación</small>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <button onclick="addProductToCart(${producto.id})" class="btn btn-primary w-full">
+                    <i data-lucide="shopping-cart"></i>
+                    Agregar al Carrito
                 </button>
             </div>
         </div>
-    </div>`;
+    `;
 }
 
 // Actualizar precio del producto en tiempo real
 function updateProductPrice(productoId) {
-    const all = (typeof getProductosCatalogo === 'function')
-        ? Object.values(getProductosCatalogo()).flat()
-        : Object.values(productos).flat();
-    const producto = all.find(p => p.id == productoId);
+    const producto = findProductById(productoId);
     if (!producto) return;
-    const cantidad    = parseInt(document.getElementById(`cantidad-${productoId}`)?.value) || 1;
-    const tipoEntrega = document.querySelector(`input[name="entrega-${productoId}"]:checked`)?.value || 'terminada';
+
+    const cantidad = parseInt(document.getElementById(`cantidad-${productoId}`).value) || 1;
+    const tipoEntrega = document.querySelector(`input[name="entrega-${productoId}"]:checked`).value;
+    
     let precio = producto.precio * cantidad;
-    if (tipoEntrega === 'rustica') precio *= 0.85;
-    const el = document.getElementById(`price-${productoId}`);
-    if (el) el.textContent = precio.toFixed(2);
+    if (tipoEntrega === 'rustica') {
+        precio *= 0.85;
+    }
+
+    document.getElementById(`price-${productoId}`).textContent = precio.toFixed(2);
 }
 
 // Buscar producto por ID
 function findProductById(id) {
-    const all = (typeof getProductosCatalogo === 'function')
-        ? Object.values(getProductosCatalogo()).flat()
-        : Object.values(productos).flat();
-    return all.find(p => p.id == id) || null;
+    for (let categoria in productos) {
+        const producto = productos[categoria].find(p => p.id === id);
+        if (producto) return producto;
+    }
+    return null;
 }
 
 // Agregar producto al carrito
 function addProductToCart(productoId) {
     const producto = findProductById(productoId);
     if (!producto) return;
-    const cantidad    = parseInt(document.getElementById(`cantidad-${productoId}`)?.value) || 1;
-    const color       = document.getElementById(`color-${productoId}`)?.value;
-    const acabado     = document.getElementById(`acabado-${productoId}`)?.value;
-    const material    = document.getElementById(`material-${productoId}`)?.value;
-    const tipoEntrega = document.querySelector(`input[name="entrega-${productoId}"]:checked`)?.value || 'terminada';
-    let precioTotal = producto.precio * cantidad;
-    if (tipoEntrega === 'rustica') precioTotal *= 0.85;
-    const colorNombre = (typeof codigosColor !== 'undefined' && codigosColor[color])
-        ? `${color} — ${codigosColor[color].nombre}` : color;
-    addToCart({ ...producto, config: { cantidad, color, colorNombre, acabado, material, tipoEntrega },
-        precioTotal: parseFloat(precioTotal.toFixed(2)) });
-    setTimeout(() => lucide.createIcons(), 100);
-}
 
-// Cotizar por WhatsApp
-function cotizarProducto(productoId) {
-    const producto = findProductById(productoId);
-    if (!producto) return;
-    const color    = document.getElementById(`color-${productoId}`)?.value || '';
-    const acabado  = document.getElementById(`acabado-${productoId}`)?.value || '';
-    const material = document.getElementById(`material-${productoId}`)?.value || '';
-    const cantidad = document.getElementById(`cantidad-${productoId}`)?.value || '1';
-    const colorNombre = (typeof codigosColor !== 'undefined' && codigosColor[color])
-        ? `${color} (${codigosColor[color].nombre})` : color;
-    const msg = `Hola, me interesa cotizar:\n\n📦 *${producto.nombre}*\nModelo: ${producto.codigo||'—'}\nColor: ${colorNombre}\nAcabado: ${acabado}\nMaterial: ${material}\nCantidad: ${cantidad}\n\n¿Me pueden dar el precio?`;
-    window.open(`https://wa.me/${contactInfo.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+    const cantidad = parseInt(document.getElementById(`cantidad-${productoId}`).value) || 1;
+    const color = document.getElementById(`color-${productoId}`).value;
+    const acabado = document.getElementById(`acabado-${productoId}`).value;
+    const material = document.getElementById(`material-${productoId}`).value;
+    const tipoEntrega = document.querySelector(`input[name="entrega-${productoId}"]:checked`).value;
+
+    const config = {
+        cantidad,
+        color,
+        acabado,
+        material,
+        tipoEntrega
+    };
+
+    let precioTotal = producto.precio * cantidad;
+    if (tipoEntrega === 'rustica') {
+        precioTotal *= 0.85;
+    }
+
+    const item = {
+        ...producto,
+        config,
+        precioTotal: parseFloat(precioTotal.toFixed(2))
+    };
+
+    addToCart(item);
+    
+    // Reinicializar iconos después de agregar
+    setTimeout(() => lucide.createIcons(), 100);
 }
 
 // Crear tarjeta de testimonio
 function createTestimonialCard(testimonio) {
     const stars = '★'.repeat(testimonio.calificacion) + '☆'.repeat(5 - testimonio.calificacion);
+    
     return `
-    <div class="card testimonial-card">
-        <div class="card-body">
-            <div class="testimonial-header">
-                <div class="testimonial-avatar">${testimonio.imagen}</div>
-                <div>
-                    <h4>${testimonio.nombre}</h4>
-                    <p class="testimonial-project">${testimonio.proyecto}</p>
+        <div class="card testimonial-card">
+            <div class="card-body">
+                <div class="testimonial-header">
+                    <div class="testimonial-avatar">${testimonio.imagen}</div>
+                    <div>
+                        <h4>${testimonio.nombre}</h4>
+                        <div class="testimonial-stars">${stars}</div>
+                    </div>
+                </div>
+                <p class="testimonial-text">"${testimonio.texto}"</p>
+                <div class="testimonial-footer">
+                    <span class="testimonial-project">${testimonio.proyecto}</span>
+                    <span class="testimonial-date">${formatDate(testimonio.fecha)}</span>
                 </div>
             </div>
-            <div class="testimonial-stars">${stars}</div>
-            <p class="testimonial-text">"${testimonio.texto}"</p>
-            <p class="testimonial-date">${formatDate(testimonio.fecha)}</p>
         </div>
-    </div>`;
+    `;
 }
 
-// Crear tarjeta de proyecto (galería)
+// Crear tarjeta de proyecto
 function createProjectCard(proyecto) {
     return `
-    <div class="card project-card" style="overflow:hidden">
-        ${proyecto.imagenUrl
-            ? `<img src="${proyecto.imagenUrl}" alt="${proyecto.titulo}"
-                style="width:100%;height:200px;object-fit:cover"
-                onerror="this.style.display='none'">`
-            : `<div style="height:200px;display:flex;align-items:center;justify-content:center;
-                font-size:4rem;background:linear-gradient(135deg,#1e293b,#334155)">
-                ${proyecto.imagen}</div>`
-        }
-        <div class="card-body">
-            <span style="font-size:.75rem;background:var(--color-primary);color:#fff;
-                padding:2px 8px;border-radius:20px">${proyecto.categoria}</span>
-            <h4 style="margin:.5rem 0 .25rem">${proyecto.titulo}</h4>
-            <p style="font-size:.85rem;color:var(--color-gray-600);margin-bottom:.5rem">
-                ${proyecto.descripcion?.substring(0,90)}...</p>
-            <div style="display:flex;gap:1rem;font-size:.75rem;color:var(--color-gray-500)">
-                <span>📐 ${proyecto.medidas || '—'}</span>
-                <span>🔩 ${proyecto.material || '—'}</span>
+        <div class="card project-card">
+            <div class="project-image">
+                <div class="project-icon">${proyecto.imagen}</div>
+            </div>
+            <div class="card-body">
+                <div class="project-category">${proyecto.categoria}</div>
+                <h3>${proyecto.titulo}</h3>
+                <p>${proyecto.descripcion}</p>
+                <div class="project-date">
+                    <i data-lucide="calendar"></i>
+                    ${formatDate(proyecto.fecha)}
+                </div>
             </div>
         </div>
-    </div>`;
+    `;
 }
 
 // Crear tarjeta de insignia
 function createInsigniaCard(insignia, desbloqueada = false) {
     return `
-    <div class="insignia-card ${desbloqueada ? 'desbloqueada' : 'bloqueada'}">
-        <div class="insignia-emoji">${insignia.icono}</div>
-        <h4>${insignia.nombre}</h4>
-        <div class="insignia-nivel-badge">${insignia.nivel}</div>
-        ${insignia.comprasMin > 0
-            ? `<p style="font-size:.75rem;color:var(--color-gray-500)">${insignia.comprasMin} compras</p>` : ''}
-        ${insignia.descuento > 0
-            ? `<div class="descuento-mini">${insignia.descuento}% dto.</div>` : ''}
-        ${!desbloqueada ? '<div class="lock-overlay"><i data-lucide="lock"></i></div>' : ''}
-    </div>`;
+        <div class="card insignia-card ${desbloqueada ? 'desbloqueada' : 'bloqueada'}">
+            <div class="insignia-icon">${insignia.icono}</div>
+            <h4>${insignia.nombre}</h4>
+            <div class="insignia-nivel">${insignia.nivel}</div>
+            <p class="insignia-requisito">${insignia.requisito}</p>
+            ${insignia.descuento > 0 ? `<div class="insignia-descuento">${insignia.descuento}% OFF</div>` : ''}
+            <div class="insignia-beneficios">
+                ${insignia.beneficios.map(b => `
+                    <div class="insignia-beneficio">
+                        <i data-lucide="check-circle"></i>
+                        <span>${b}</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+// Crear item del carrito
+function createCartItem(item, index) {
+    return `
+        <div class="cart-item">
+            <div class="cart-item-info">
+                <div class="cart-item-icon">${item.imagen}</div>
+                <div class="cart-item-details">
+                    <h3>${item.config.cantidad}x ${item.nombre}</h3>
+                    <div class="cart-item-specs">
+                        <span><strong>Color:</strong> ${item.config.color}</span>
+                        <span><strong>Acabado:</strong> ${item.config.acabado}</span>
+                        <span><strong>Material:</strong> ${item.config.material}</span>
+                        <span><strong>Entrega:</strong> ${item.config.tipoEntrega === 'terminada' ? 'Terminada' : 'Rústica'}</span>
+                    </div>
+                    ${item.config.tipoEntrega === 'terminada' ? `
+                        <div class="cart-item-included">
+                            <i data-lucide="check-circle"></i>
+                            Incluye instalación y toma de medidas
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+            <div class="cart-item-actions">
+                <div class="cart-item-price">$${item.precioTotal.toFixed(2)}</div>
+                <button onclick="removeCartItem(${item.id})" class="btn-remove">
+                    <i data-lucide="trash-2"></i>
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// Remover item del carrito
+function removeCartItem(itemId) {
+    removeFromCart(itemId);
+    navigateTo('carrito'); // Recargar la página del carrito
 }
 
 // Crear tarjeta de artículo del blog
 function createArticleCard(articulo) {
     return `
-    <div class="card article-card">
-        <div class="card-body">
-            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem">
-                <span style="font-size:2rem">${articulo.imagen}</span>
-                <span style="font-size:.7rem;background:var(--color-primary);color:#fff;
-                    padding:2px 8px;border-radius:20px">${articulo.categoria}</span>
-            </div>
-            <h4 style="margin-bottom:.5rem">${articulo.titulo}</h4>
-            <p style="font-size:.85rem;color:var(--color-gray-600);margin-bottom:.75rem">
-                ${articulo.resumen}</p>
-            <div style="display:flex;justify-content:space-between;align-items:center">
-                <span style="font-size:.75rem;color:var(--color-gray-400)">
-                    ${formatDate(articulo.fecha)}</span>
-                <span style="font-size:.8rem;color:var(--color-primary);font-weight:700">
-                    Leer más →</span>
+        <div class="card article-card" onclick="navigateTo('blog-detalle', ${articulo.id})">
+            <div class="article-icon">${articulo.imagen}</div>
+            <div class="card-body">
+                <div class="article-category">${articulo.categoria}</div>
+                <h3>${articulo.titulo}</h3>
+                <p>${articulo.resumen}</p>
+                <div class="article-footer">
+                    <span class="article-date">
+                        <i data-lucide="calendar"></i>
+                        ${formatDate(articulo.fecha)}
+                    </span>
+                    <span class="article-link">
+                        Leer más <i data-lucide="arrow-right"></i>
+                    </span>
+                </div>
             </div>
         </div>
-    </div>`;
+    `;
 }
+
+// ========================================
+// FUNCIONES AUXILIARES
+// ========================================
 
 // Formatear fecha
 function formatDate(dateString) {
-    if (!dateString) return '';
-    try {
-        return new Date(dateString).toLocaleDateString('es-EC', {
-            year: 'numeric', month: 'long', day: 'numeric'
-        });
-    } catch { return dateString; }
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', options);
 }
 
-// ─── Menú móvil ──────────────────────────────────────────────────────────────
+// Generar mensaje de WhatsApp
+function generateWhatsAppMessage() {
+    const cart = getCart();
+    const user = getUser();
+    const descuento = getDescuentoActual();
+    
+    if (cart.length === 0) {
+        showNotification('Tu carrito está vacío', 'error');
+        return;
+    }
+
+    let mensaje = `¡Hola! He visitado el Sitio Web de Mueblería y Cerrajería "Benjamín" y quiero realizar un pedido:\n\n`;
+    
+    let total = 0;
+    cart.forEach((item, index) => {
+        mensaje += `${index + 1}. ${item.config.cantidad}x ${item.nombre}\n`;
+        mensaje += `   - Color: ${item.config.color} | Acabado: ${item.config.acabado}\n`;
+        mensaje += `   - Material: ${item.config.material}\n`;
+        mensaje += `   - Entrega: ${item.config.tipoEntrega === 'terminada' ? 'Terminada (incluye instalación)' : 'Rústica (retiro en taller)'}\n`;
+        mensaje += `   - Subtotal: $${item.precioTotal}\n\n`;
+        total += item.precioTotal;
+    });
+
+    if (descuento > 0) {
+        const totalConDescuento = total * (1 - descuento / 100);
+        mensaje += `Subtotal: $${total.toFixed(2)}\n`;
+        mensaje += `Descuento (${descuento}%): -$${(total - totalConDescuento).toFixed(2)}\n`;
+        total = totalConDescuento;
+    }
+
+    mensaje += `\nTOTAL APROXIMADO: $${total.toFixed(2)}\n`;
+    mensaje += `\n⚠️ Precio final se confirma según especificaciones exactas.\n`;
+    
+    if (user) {
+        mensaje += `\n--- DATOS DEL CLIENTE ---\n`;
+        mensaje += `Nombre: ${user.nombre}\n`;
+        mensaje += `Email: ${user.email}\n`;
+        mensaje += `Teléfono: ${user.telefono}\n`;
+        if (user.direccion) mensaje += `Dirección: ${user.direccion}\n`;
+        if (user.ciudad) mensaje += `Ciudad: ${user.ciudad}\n`;
+    }
+
+    const encoded = encodeURIComponent(mensaje);
+    window.open(`https://wa.me/${contactInfo.whatsapp}?text=${encoded}`, '_blank');
+
+    // Guardar el pedido
+    savePedido({
+        items: cart,
+        total: total,
+        descuento: descuento,
+        mensaje: mensaje
+    });
+
+    // Limpiar carrito después de enviar
+    clearCart();
+    
+    showNotification('Pedido enviado a WhatsApp. Te contactaremos pronto!', 'success');
+}
+
+// ========================================
+// MENÚ MOBILE
+// ========================================
+
 function toggleMobileMenu() {
     const navMobile  = document.getElementById('navMobile');
     const menuToggle = document.getElementById('menuToggle');
     if (!navMobile || !menuToggle) return;
+
     navMobile.classList.toggle('active');
-    const isOpen = navMobile.classList.contains('active');
-    const icon = menuToggle.querySelector('i') || menuToggle.querySelector('svg');
-    if (icon) { icon.setAttribute('data-lucide', isOpen ? 'x' : 'menu'); lucide.createIcons(); }
+    const abierto = navMobile.classList.contains('active');
+
+    // Lucide reemplaza <i> con <svg> — buscar ambos
+    const icon = menuToggle.querySelector('svg') || menuToggle.querySelector('i');
+    if (icon) {
+        icon.setAttribute('data-lucide', abierto ? 'x' : 'menu');
+        lucide.createIcons();
+    } else {
+        // Fallback: reemplazar el contenido del botón con texto unicode
+        menuToggle.innerHTML = abierto
+            ? '<span style="font-size:1.25rem;line-height:1">✕</span>'
+            : '<span style="font-size:1.25rem;line-height:1">☰</span>';
+    }
 }
 
 function closeMobileMenu() {
     const navMobile  = document.getElementById('navMobile');
     const menuToggle = document.getElementById('menuToggle');
     if (!navMobile || !menuToggle) return;
+
     navMobile.classList.remove('active');
-    const icon = menuToggle.querySelector('i') || menuToggle.querySelector('svg');
-    if (icon) { icon.setAttribute('data-lucide', 'menu'); lucide.createIcons(); }
+
+    const icon = menuToggle.querySelector('svg') || menuToggle.querySelector('i');
+    if (icon) {
+        icon.setAttribute('data-lucide', 'menu');
+        lucide.createIcons();
+    } else {
+        menuToggle.innerHTML = '<span style="font-size:1.25rem;line-height:1">☰</span>';
+    }
 }
 
-// ─── Scroll header ────────────────────────────────────────────────────────────
+// ========================================
+// SCROLL HEADER
+// ========================================
+
 window.addEventListener('scroll', () => {
     const header = document.getElementById('header');
-    if (header) header.classList.toggle('scrolled', window.scrollY > 50);
+    if (window.scrollY > 50) {
+        header.classList.add('scrolled');
+    } else {
+        header.classList.remove('scrolled');
+    }
 });
 
-// ─── Inicialización de eventos ────────────────────────────────────────────────
+// ========================================
+// INICIALIZACIÓN DE EVENTOS
+// ========================================
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Menú mobile
     const menuToggle = document.getElementById('menuToggle');
-    if (menuToggle) menuToggle.addEventListener('click', toggleMobileMenu);
-    document.addEventListener('click', (e) => {
-        const navMobile = document.getElementById('navMobile');
-        const menuToggle = document.getElementById('menuToggle');
-        if (navMobile?.classList.contains('active') &&
-            !navMobile.contains(e.target) &&
-            !menuToggle?.contains(e.target)) closeMobileMenu();
-    });
+    if (menuToggle) {
+        menuToggle.addEventListener('click', toggleMobileMenu);
+    }
 });

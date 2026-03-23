@@ -105,21 +105,34 @@ async function escanearQRCedula(file, cedulaEsperada, nombreEsperado) {
         reader.onload = (e) => {
             const img = new Image();
             img.onload = () => {
-                // Escalar si es muy grande — mejora detección
-                const MAX = 1400;
-                let w = img.width, h = img.height;
-                if (w > MAX || h > MAX) {
-                    const r = Math.min(MAX/w, MAX/h);
-                    w = Math.round(w*r); h = Math.round(h*r);
-                }
-                const canvas = document.createElement('canvas');
-                canvas.width = w; canvas.height = h;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, w, h);
-                const imageData = ctx.getImageData(0, 0, w, h);
+                // Probar múltiples tamaños — fotos de móvil son muy grandes
+                // y a veces jsQR funciona mejor con ciertos tamaños
+                const ESCALAS = [800, 1200, 500, 1600];
+                let code = null;
 
-                // Intentar leer con ambas inversiones
-                const code = jsQR(imageData.data, w, h, { inversionAttempts: 'attemptBoth' });
+                for (const MAX of ESCALAS) {
+                    let w = img.width, h = img.height;
+                    if (w > MAX || h > MAX) {
+                        const r = Math.min(MAX/w, MAX/h);
+                        w = Math.round(w*r); h = Math.round(h*r);
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+
+                    // Intentar normal
+                    const imageData = ctx.getImageData(0, 0, w, h);
+                    code = jsQR(imageData.data, w, h, { inversionAttempts: 'attemptBoth' });
+                    if (code) break;
+
+                    // Intentar con mayor contraste (ayuda con fotos oscuras)
+                    ctx.filter = 'contrast(1.5) brightness(1.1)';
+                    ctx.drawImage(img, 0, 0, w, h);
+                    const imageData2 = ctx.getImageData(0, 0, w, h);
+                    code = jsQR(imageData2.data, w, h, { inversionAttempts: 'attemptBoth' });
+                    if (code) break;
+                }
 
                 if (!code) {
                     resolve({

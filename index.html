@@ -102,7 +102,10 @@
                 </nav>
 
                 <!-- Botón Menú Mobile -->
-                <button class="menu-toggle" id="menuToggle">
+                <button class="menu-toggle" id="menuToggle"
+                        onclick="toggleMobileMenu()" 
+                        aria-label="Abrir menú"
+                        style="cursor:pointer;min-width:44px;min-height:44px">
                     <i data-lucide="menu"></i>
                 </button>
             </div>
@@ -207,6 +210,8 @@
 
     <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- jsQR: leer códigos QR desde imágenes (verificación de cédula) -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
     <!-- Scripts -->
     <script src="js/verificacion.js"></script>
