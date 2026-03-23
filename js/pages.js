@@ -1380,6 +1380,10 @@ function renderAdminPanel() {
             <div class="action-card" onclick="navigateTo('admin-blog')">
                 <i data-lucide="book-open"></i><h3>Blog</h3><p>Publicar artículos</p>
             </div>
+            <div class="action-card" onclick="navigateTo('admin-verificaciones')" style="position:relative">
+                <i data-lucide="shield-check"></i><h3>Verificaciones</h3><p>Aprobar identidades</p>
+                ${(()=>{const p=(typeof getSolicitudesVerificacion==='function'?getSolicitudesVerificacion():[]).filter(s=>s.estado==='pendiente');return p.length>0?'<span style="position:absolute;top:.75rem;right:.75rem;background:#ef4444;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800">'+p.length+'</span>':''})()}
+            </div>
             <div class="action-card" onclick="navigateTo('admin-pedidos')" style="position:relative">
                 <i data-lucide="package"></i><h3>Pedidos</h3><p>Seguimiento de estado</p>
                 ${(()=>{const p=getPedidos().filter(x=>x.estado==='por-iniciar'||x.estado==='en-proceso');return p.length>0?'<span style="position:absolute;top:.75rem;right:.75rem;background:#ef4444;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800">'+p.length+'</span>':''})()}
@@ -3975,4 +3979,227 @@ function validarPassReg() {
         msg.textContent = '❌ Las contraseñas no coinciden';
         msg.style.color = 'var(--color-error)';
     }
+}
+
+// ========================================
+// ADMIN — GESTIÓN DE VERIFICACIONES
+// ========================================
+
+// La tabla de verificaciones pendientes es GLOBAL (no por usuario)
+// Se guarda en 'solicitudesVerificacion' — accesible desde el admin
+
+function getSolicitudesVerificacion() {
+    return JSON.parse(localStorage.getItem('solicitudesVerificacion') || '[]');
+}
+function saveSolicitudesVerificacion(lista) {
+    localStorage.setItem('solicitudesVerificacion', JSON.stringify(lista));
+}
+
+// El cliente llama esto al enviar por WhatsApp → queda en cola del admin
+function registrarSolicitudVerificacion(user) {
+    const lista = getSolicitudesVerificacion();
+    const clave = user.cedula || user.email;
+    const existe = lista.findIndex(s => (s.cedula && s.cedula === user.cedula) || s.email === user.email);
+    const entrada = {
+        id:           Date.now(),
+        cedula:       user.cedula  || '',
+        nombre:       user.nombre  || '',
+        email:        user.email   || '',
+        telefono:     user.telefono|| '',
+        estado:       'pendiente',
+        fechaSolicitud: new Date().toISOString(),
+        metodo:       'WhatsApp (manual)',
+        notaAdmin:    ''
+    };
+    if (existe >= 0) lista[existe] = { ...lista[existe], ...entrada, estado: 'pendiente' };
+    else lista.unshift(entrada);
+    saveSolicitudesVerificacion(lista);
+}
+
+// El admin llama esto para aprobar o rechazar
+function resolverVerificacion(id, decision, nota) {
+    const lista = getSolicitudesVerificacion();
+    const idx   = lista.findIndex(s => s.id === id || s.id === Number(id));
+    if (idx === -1) return;
+    lista[idx].estado         = decision; // 'aprobado' | 'rechazado'
+    lista[idx].fechaResolucion = new Date().toISOString();
+    lista[idx].notaAdmin      = nota || '';
+    saveSolicitudesVerificacion(lista);
+
+    // Si aprobado → actualizar verificacionesAprobadas para que el cliente lo vea
+    if (decision === 'aprobado') {
+        const aprobadas = JSON.parse(localStorage.getItem('verificacionesAprobadas') || '{}');
+        const clave = lista[idx].cedula || lista[idx].email;
+        aprobadas[clave] = {
+            aprobado:   true,
+            fecha:      new Date().toISOString(),
+            aprobadoPor:'admin',
+            nombre:     lista[idx].nombre
+        };
+        localStorage.setItem('verificacionesAprobadas', JSON.stringify(aprobadas));
+    }
+}
+
+function renderAdminVerificaciones() {
+    if (!isAdminAuthenticated()) { navigateTo('admin-login'); return ''; }
+
+    const solicitudes = getSolicitudesVerificacion();
+    const pendientes  = solicitudes.filter(s => s.estado === 'pendiente');
+    const resueltas   = solicitudes.filter(s => s.estado !== 'pendiente');
+    const filtro      = window._filtroVerif || 'pendiente';
+    const mostrar     = filtro === 'pendiente' ? pendientes : resueltas;
+
+    return `
+    <div class="fade-in">
+        <div class="admin-header">
+            <div>
+                <h1>🔐 Verificaciones de Identidad</h1>
+                <p>${pendientes.length} pendientes · ${resueltas.length} resueltas</p>
+            </div>
+            <button onclick="navigateTo('admin-panel')" class="btn btn-secondary">
+                <i data-lucide="arrow-left"></i> Panel
+            </button>
+        </div>
+
+        <div class="flex gap-2 mb-4">
+            <button onclick="switchFiltroVerif('pendiente')" id="vBtn-pendiente"
+                style="padding:6px 16px;border-radius:20px;font-weight:700;font-size:.8rem;cursor:pointer;
+                       border:2px solid #f59e0b;
+                       background:${filtro==='pendiente'?'#f59e0b':'transparent'};
+                       color:${filtro==='pendiente'?'#fff':'#f59e0b'}">
+                ⏳ Pendientes (${pendientes.length})
+            </button>
+            <button onclick="switchFiltroVerif('resueltas')" id="vBtn-resueltas"
+                style="padding:6px 16px;border-radius:20px;font-weight:700;font-size:.8rem;cursor:pointer;
+                       border:2px solid var(--color-gray-400);
+                       background:${filtro==='resueltas'?'var(--color-gray-400)':'transparent'};
+                       color:${filtro==='resueltas'?'#fff':'var(--color-gray-600)'}">
+                ✅ Resueltas (${resueltas.length})
+            </button>
+        </div>
+
+        ${mostrar.length === 0 ? `
+        <div class="alert alert-success">
+            <i data-lucide="check-circle"></i>
+            <p>${filtro === 'pendiente'
+                ? '🎉 No hay solicitudes pendientes.'
+                : 'No hay solicitudes resueltas aún.'}</p>
+        </div>
+        <div class="card mt-3" style="background:#f8fafc">
+            <div class="card-body">
+                <h3 style="margin-bottom:.5rem">ℹ️ ¿Cómo funciona?</h3>
+                <ol style="font-size:.875rem;color:var(--color-gray-600);padding-left:1.25rem;line-height:2">
+                    <li>El cliente se registra e intenta verificar su identidad</li>
+                    <li>Si el QR no funciona, envía un mensaje al soporte (+593 981 676 646)</li>
+                    <li>La solicitud aparece aquí automáticamente</li>
+                    <li>Tú revisas la foto de la cédula en WhatsApp</li>
+                    <li>Apruebas o rechazas desde esta pantalla</li>
+                    <li>El cliente puede acceder a sus notas de venta</li>
+                </ol>
+            </div>
+        </div>` : `
+        <div style="display:grid;gap:1rem">
+            ${mostrar.map(s => {
+                const esAprobado  = s.estado === 'aprobado';
+                const esRechazado = s.estado === 'rechazado';
+                const color = s.estado === 'pendiente' ? '#f59e0b'
+                            : s.estado === 'aprobado'  ? '#10b981' : '#ef4444';
+                const badgeLabel = s.estado === 'pendiente' ? '⏳ Pendiente'
+                                 : s.estado === 'aprobado'  ? '✅ Aprobado' : '❌ Rechazado';
+                return `
+                <div class="card" style="border-left:4px solid ${color}">
+                    <div class="card-body">
+                        <div style="display:flex;align-items:flex-start;
+                                    justify-content:space-between;gap:1rem;flex-wrap:wrap">
+                            <div>
+                                <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.25rem">
+                                    <strong style="font-size:1rem">${s.nombre||'Sin nombre'}</strong>
+                                    <span style="background:${color}22;color:${color};
+                                        padding:2px 10px;border-radius:20px;font-size:.7rem;font-weight:700">
+                                        ${badgeLabel}
+                                    </span>
+                                </div>
+                                <div style="font-size:.8rem;color:var(--color-gray-500)">
+                                    🪪 ${s.cedula||'Sin cédula'} ·
+                                    📧 ${s.email||'—'} ·
+                                    📱 ${s.telefono||'—'}
+                                </div>
+                                <div style="font-size:.75rem;color:var(--color-gray-400);margin-top:.2rem">
+                                    Solicitó: ${new Date(s.fechaSolicitud).toLocaleString('es-EC')}
+                                    ${s.fechaResolucion
+                                        ? ' · Resuelto: '+new Date(s.fechaResolucion).toLocaleString('es-EC')
+                                        : ''}
+                                </div>
+                                ${s.notaAdmin ? `<div style="font-size:.8rem;color:var(--color-gray-600);
+                                    margin-top:.25rem;font-style:italic">
+                                    📝 ${s.notaAdmin}</div>` : ''}
+                            </div>
+
+                            <!-- Botón WhatsApp para ver la cédula -->
+                            <a href="https://wa.me/593981676646" target="_blank"
+                               class="btn btn-secondary btn-sm" style="white-space:nowrap">
+                                <i data-lucide="message-circle"></i> Ver en WhatsApp
+                            </a>
+                        </div>
+
+                        ${s.estado === 'pendiente' ? `
+                        <hr style="margin:1rem 0;border-color:var(--color-gray-200)">
+                        <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
+                            <div class="form-group" style="margin:0;flex:1;min-width:200px">
+                                <label class="form-label" style="font-size:.75rem">
+                                    Nota (opcional — visible para el cliente)
+                                </label>
+                                <input type="text" id="notaVerif_${s.id}" class="form-input"
+                                    style="font-size:.8rem;padding:.4rem .75rem"
+                                    placeholder="Ej: Cédula verificada en persona">
+                            </div>
+                            <button onclick="accionVerificacion(${s.id},'aprobado')"
+                                class="btn btn-success btn-sm">
+                                <i data-lucide="check"></i> Aprobar
+                            </button>
+                            <button onclick="accionVerificacion(${s.id},'rechazado')"
+                                class="btn btn-secondary btn-sm"
+                                style="border:2px solid #ef4444;color:#ef4444">
+                                <i data-lucide="x"></i> Rechazar
+                            </button>
+                        </div>` : ''}
+
+                        ${esAprobado ? `
+                        <div style="margin-top:.75rem;font-size:.8rem;color:#166534;
+                            background:#dcfce7;padding:.5rem .75rem;border-radius:6px">
+                            ✅ Cliente verificado — puede acceder a sus notas de venta
+                        </div>` : ''}
+                        ${esRechazado ? `
+                        <div style="margin-top:.75rem;font-size:.8rem;color:#991b1b;
+                            background:#fee2e2;padding:.5rem .75rem;border-radius:6px">
+                            ❌ Solicitud rechazada
+                            ${s.notaAdmin ? ' — '+s.notaAdmin : ''}
+                        </div>` : ''}
+                    </div>
+                </div>`;
+            }).join('')}
+        </div>`}
+    </div>`;
+}
+
+function switchFiltroVerif(filtro) {
+    window._filtroVerif = filtro;
+    const main = document.getElementById('mainContent');
+    if (main) { main.innerHTML = renderAdminVerificaciones(); lucide.createIcons(); }
+}
+
+function accionVerificacion(id, decision) {
+    const nota = document.getElementById('notaVerif_'+id)?.value.trim() || '';
+    if (decision === 'rechazado' && !nota) {
+        const motivo = prompt('¿Por qué se rechaza? (aparecerá en el mensaje al cliente):');
+        if (motivo === null) return; // canceló
+        resolverVerificacion(id, decision, motivo);
+    } else {
+        resolverVerificacion(id, decision, nota);
+    }
+    const msg = decision === 'aprobado'
+        ? '✅ Verificación aprobada — el cliente ya puede acceder a sus notas'
+        : '❌ Solicitud rechazada';
+    showNotification(msg, decision === 'aprobado' ? 'success' : 'info');
+    switchFiltroVerif(window._filtroVerif || 'pendiente');
 }

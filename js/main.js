@@ -116,6 +116,9 @@ async function navigateTo(page, param = null) {
         case 'admin-pedidos':
             content = renderAdminPedidos();
             break;
+        case 'admin-verificaciones':
+            content = renderAdminVerificaciones();
+            break;
         case 'blog-detalle':
             content = renderBlogDetalle(param);
             break;

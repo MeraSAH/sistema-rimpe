@@ -5,6 +5,20 @@
 
 // ── Estado de verificación ───────────────────────────────────
 function getVerificacion() {
+    // 1. Ver si el admin aprobó manualmente (tiene prioridad)
+    const user     = typeof getUser === 'function' ? getUser() : null;
+    const clave    = user?.cedula || user?.email;
+    if (clave) {
+        const aprobadas = JSON.parse(localStorage.getItem('verificacionesAprobadas') || '{}');
+        if (aprobadas[clave]?.aprobado) {
+            // Actualizar el estado local para que sea consistente
+            const verif = { estado: 'verificado', metodo: 'Aprobado por administrador',
+                            fecha: aprobadas[clave].fecha };
+            localStorage.setItem('identidadVerificada', JSON.stringify(verif));
+            return verif;
+        }
+    }
+    // 2. Estado guardado localmente (QR, etc.)
     const v = localStorage.getItem('identidadVerificada');
     return v ? JSON.parse(v) : { estado: 'sin_verificar', metodo: null, fecha: null };
 }
@@ -468,8 +482,11 @@ function ejecutarPasoA() {
     // NO al maestro (593985998615) — el soporte lleva el registro de identidades
     window.open(`https://wa.me/593981676646?text=${encodeURIComponent(msg)}`, '_blank');
 
-    // Marcar como pendiente de verificación manual
+    // Marcar como pendiente + añadir a la cola del admin
     setVerificacion('pendiente_admin', 'WhatsApp (manual)');
+    if (typeof registrarSolicitudVerificacion === 'function') {
+        registrarSolicitudVerificacion(typeof getUser==='function' ? getUser() : {});
+    }
 
     showNotification('Solicitud enviada. El administrador la revisará pronto.', 'success');
     setTimeout(() => {
