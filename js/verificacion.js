@@ -5,20 +5,34 @@
 
 // ── Estado de verificación ───────────────────────────────────
 function getVerificacion() {
-    // 1. Ver si el admin aprobó manualmente (tiene prioridad)
-    const user     = typeof getUser === 'function' ? getUser() : null;
-    const clave    = user?.cedula || user?.email;
+    const user  = typeof getUser === 'function' ? getUser() : null;
+    const clave = user?.cedula || user?.email;
+
     if (clave) {
+        // 1. ¿El admin revocó la verificación? — máxima prioridad
+        const revocadas = JSON.parse(localStorage.getItem('verificacionesRevocadas') || '{}');
+        if (revocadas[clave]) {
+            // Limpiar estado local y devolver sin_verificar con el motivo
+            localStorage.removeItem('identidadVerificada');
+            return {
+                estado:  'sin_verificar',
+                metodo:  null,
+                fecha:   null,
+                motivo:  revocadas[clave].motivo || 'El administrador solicitó nueva verificación'
+            };
+        }
+
+        // 2. ¿El admin aprobó manualmente?
         const aprobadas = JSON.parse(localStorage.getItem('verificacionesAprobadas') || '{}');
         if (aprobadas[clave]?.aprobado) {
-            // Actualizar el estado local para que sea consistente
             const verif = { estado: 'verificado', metodo: 'Aprobado por administrador',
                             fecha: aprobadas[clave].fecha };
             localStorage.setItem('identidadVerificada', JSON.stringify(verif));
             return verif;
         }
     }
-    // 2. Estado guardado localmente (QR, etc.)
+
+    // 3. Estado guardado localmente (QR, proceso normal)
     const v = localStorage.getItem('identidadVerificada');
     return v ? JSON.parse(v) : { estado: 'sin_verificar', metodo: null, fecha: null };
 }
@@ -234,6 +248,8 @@ function renderVerificacionIdentidad() {
     }
 
     // Sin verificar → mostrar flujo completo
+    // Mostrar motivo si fue revocado por el admin
+    const motivoRevoc = verif.motivo || null;
     return `
     <div class="fade-in container-small">
         <div class="page-header text-center">
@@ -254,6 +270,15 @@ function renderVerificacionIdentidad() {
                 <button onclick="actualizarCedulaPerfil()" class="btn btn-primary btn-sm mt-2">
                     Guardar Cédula
                 </button>
+            </div>
+        </div>` : ''}
+
+        ${motivoRevoc ? `
+        <div class="alert alert-warning mb-3">
+            <i data-lucide="rotate-ccw"></i>
+            <div>
+                <strong>🔄 El administrador solicitó que repitas la verificación</strong>
+                <p style="font-size:.875rem;margin:.25rem 0 0">Motivo: ${motivoRevoc}</p>
             </div>
         </div>` : ''}
 

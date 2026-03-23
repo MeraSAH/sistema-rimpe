@@ -4061,6 +4061,74 @@ function renderAdminVerificaciones() {
             </button>
         </div>
 
+
+        <!-- ── Aprobación manual directa (para solicitudes antiguas o sin cola) ── -->
+        <div class="card mb-4" style="border:2px solid var(--color-primary)">
+            <div class="card-body">
+                <h3 style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem">
+                    <i data-lucide="user-check"></i> Aprobar por cédula / email
+                </h3>
+                <p style="font-size:.8rem;color:var(--color-gray-600);margin-bottom:.75rem">
+                    Usa esto para aprobar solicitudes antiguas o clientes que ya verificaste
+                    por WhatsApp pero cuya solicitud no aparece en la cola.
+                </p>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end">
+                    <div class="form-group" style="margin:0;flex:1;min-width:200px">
+                        <label class="form-label" style="font-size:.75rem">Cédula o Email del cliente *</label>
+                        <input type="text" id="aprobManualClave" class="form-input"
+                            style="font-size:.875rem;padding:.5rem .75rem"
+                            placeholder="1234567890  ó  cliente@gmail.com">
+                    </div>
+                    <div class="form-group" style="margin:0;flex:1;min-width:180px">
+                        <label class="form-label" style="font-size:.75rem">Nombre (opcional)</label>
+                        <input type="text" id="aprobManualNombre" class="form-input"
+                            style="font-size:.875rem;padding:.5rem .75rem"
+                            placeholder="Juan Pérez">
+                    </div>
+                    <button onclick="aprobarManualDirecto()"
+                        class="btn btn-success" style="padding:.5rem 1.25rem;white-space:nowrap">
+                        <i data-lucide="check-circle"></i> Aprobar Ahora
+                    </button>
+                </div>
+                <p style="font-size:.72rem;color:var(--color-gray-400);margin-top:.5rem">
+                    Solo aprueba clientes cuya cédula ya verificaste en WhatsApp.
+                </p>
+            </div>
+        </div>
+
+        <!-- ── Revocar verificación (foto borrosa, datos incorrectos, etc.) ── -->
+        <div class="card mb-4" style="border:2px solid #ef4444">
+            <div class="card-body">
+                <h3 style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem;color:#991b1b">
+                    <i data-lucide="shield-off"></i> Revocar verificación
+                </h3>
+                <p style="font-size:.8rem;color:var(--color-gray-600);margin-bottom:.75rem">
+                    El cliente volverá al estado <strong>sin verificar</strong> y podrá repetir el proceso
+                    (útil si la foto de la cédula era borrosa, los datos no coincidían, etc.).
+                </p>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end">
+                    <div class="form-group" style="margin:0;flex:1;min-width:200px">
+                        <label class="form-label" style="font-size:.75rem">Cédula o Email del cliente *</label>
+                        <input type="text" id="revocarClave" class="form-input"
+                            style="font-size:.875rem;padding:.5rem .75rem"
+                            placeholder="1234567890  ó  cliente@gmail.com">
+                    </div>
+                    <div class="form-group" style="margin:0;flex:1;min-width:180px">
+                        <label class="form-label" style="font-size:.75rem">Motivo (lo verá el cliente)</label>
+                        <input type="text" id="revocarMotivo" class="form-input"
+                            style="font-size:.875rem;padding:.5rem .75rem"
+                            placeholder="Ej: Foto de cédula borrosa">
+                    </div>
+                    <button onclick="revocarVerificacion()"
+                        style="padding:.5rem 1.25rem;border-radius:8px;border:2px solid #ef4444;
+                               background:#ef4444;color:#fff;font-weight:700;cursor:pointer;
+                               white-space:nowrap;display:flex;align-items:center;gap:.4rem">
+                        <i data-lucide="rotate-ccw"></i> Revocar
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="flex gap-2 mb-4">
             <button onclick="switchFiltroVerif('pendiente')" id="vBtn-pendiente"
                 style="padding:6px 16px;border-radius:20px;font-weight:700;font-size:.8rem;cursor:pointer;
@@ -4202,4 +4270,121 @@ function accionVerificacion(id, decision) {
         : '❌ Solicitud rechazada';
     showNotification(msg, decision === 'aprobado' ? 'success' : 'info');
     switchFiltroVerif(window._filtroVerif || 'pendiente');
+}
+
+// ── Aprobación directa por cédula/email (sin necesitar entrada en cola) ──────
+function aprobarManualDirecto() {
+    const clave  = document.getElementById('aprobManualClave')?.value.trim();
+    const nombre = document.getElementById('aprobManualNombre')?.value.trim() || '';
+
+    if (!clave) {
+        showNotification('Ingresa la cédula o email del cliente', 'error');
+        return;
+    }
+
+    // Guardar en verificacionesAprobadas — la clave puede ser cédula o email
+    const aprobadas = JSON.parse(localStorage.getItem('verificacionesAprobadas') || '{}');
+    aprobadas[clave] = {
+        aprobado:   true,
+        fecha:      new Date().toISOString(),
+        aprobadoPor:'admin-manual',
+        nombre:     nombre
+    };
+    localStorage.setItem('verificacionesAprobadas', JSON.stringify(aprobadas));
+
+    // También crear/actualizar entrada en la cola como resuelta (para historial)
+    const lista = getSolicitudesVerificacion();
+    const existe = lista.findIndex(s => s.cedula === clave || s.email === clave);
+    if (existe >= 0) {
+        lista[existe].estado          = 'aprobado';
+        lista[existe].fechaResolucion = new Date().toISOString();
+        lista[existe].notaAdmin       = 'Aprobado manualmente por el administrador';
+    } else {
+        // No estaba en la cola — añadirla ya resuelta para el historial
+        lista.unshift({
+            id:             Date.now(),
+            cedula:         /^\d+$/.test(clave) ? clave : '',
+            email:          /^\d+$/.test(clave) ? '' : clave,
+            nombre:         nombre,
+            telefono:       '',
+            estado:         'aprobado',
+            fechaSolicitud: new Date().toISOString(),
+            fechaResolucion:new Date().toISOString(),
+            metodo:         'Aprobación manual del administrador',
+            notaAdmin:      'Verificado por WhatsApp — aprobado manualmente'
+        });
+    }
+    saveSolicitudesVerificacion(lista);
+
+    // Limpiar campos
+    const f1 = document.getElementById('aprobManualClave');
+    const f2 = document.getElementById('aprobManualNombre');
+    if (f1) f1.value = '';
+    if (f2) f2.value = '';
+
+    showNotification(
+        `✅ "${nombre || clave}" aprobado. La próxima vez que abra el sitio verá su identidad verificada.`,
+        'success'
+    );
+    switchFiltroVerif('resueltas');
+}
+
+// ── Revocar verificación de un cliente ───────────────────────────────────────
+function revocarVerificacion() {
+    const clave  = document.getElementById('revocarClave')?.value.trim();
+    const motivo = document.getElementById('revocarMotivo')?.value.trim()
+                   || 'El administrador solicitó nueva verificación';
+
+    if (!clave) {
+        showNotification('Ingresa la cédula o email del cliente', 'error');
+        return;
+    }
+
+    if (!confirm(`¿Revocar la verificación de "${clave}"?\n\nEl cliente deberá repetir el proceso de verificación.\nMotivo que verá: "${motivo}"`)) return;
+
+    // 1. Eliminar de verificacionesAprobadas
+    const aprobadas = JSON.parse(localStorage.getItem('verificacionesAprobadas') || '{}');
+    if (aprobadas[clave]) {
+        delete aprobadas[clave];
+        localStorage.setItem('verificacionesAprobadas', JSON.stringify(aprobadas));
+    }
+
+    // 2. Registrar en la cola como revocado (historial)
+    const lista = getSolicitudesVerificacion();
+    const existe = lista.findIndex(s => s.cedula === clave || s.email === clave);
+    const entradaRevocada = {
+        id:              Date.now(),
+        cedula:          /^\d+$/.test(clave) ? clave : '',
+        email:           /^\d+$/.test(clave) ? '' : clave,
+        nombre:          existe >= 0 ? lista[existe].nombre : '',
+        estado:          'revocado',
+        fechaSolicitud:  new Date().toISOString(),
+        fechaResolucion: new Date().toISOString(),
+        metodo:          'Revocado por administrador',
+        notaAdmin:       motivo
+    };
+    if (existe >= 0) {
+        lista[existe] = { ...lista[existe], ...entradaRevocada };
+    } else {
+        lista.unshift(entradaRevocada);
+    }
+    saveSolicitudesVerificacion(lista);
+
+    // 3. También guardar en 'verificacionesRevocadas' para que
+    //    getVerificacion() del cliente lo detecte y limpie su estado local
+    const revocadas = JSON.parse(localStorage.getItem('verificacionesRevocadas') || '{}');
+    revocadas[clave] = { motivo, fecha: new Date().toISOString() };
+    localStorage.setItem('verificacionesRevocadas', JSON.stringify(revocadas));
+
+    // Limpiar campos
+    const f1 = document.getElementById('revocarClave');
+    const f2 = document.getElementById('revocarMotivo');
+    if (f1) f1.value = '';
+    if (f2) f2.value = '';
+
+    showNotification(
+        `🔄 Verificación revocada. El cliente deberá verificarse de nuevo.`,
+        'info'
+    );
+    switchFiltroVerif('resueltas');
 }
