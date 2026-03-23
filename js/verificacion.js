@@ -6,23 +6,29 @@
 // ── Estado de verificación ───────────────────────────────────
 function getVerificacion() {
     const user  = typeof getUser === 'function' ? getUser() : null;
-    const clave = user?.cedula || user?.email;
+    const clave = (user?.cedula && user.cedula !== '') ? user.cedula : user?.email;
 
+    // 1. PRIMERO leer el estado guardado localmente (QR, etc.)
+    const vLocal = localStorage.getItem('identidadVerificada');
+    const estadoLocal = vLocal ? JSON.parse(vLocal) : null;
+
+    // Si ya está verificado localmente, NO pisar ese estado con otras comprobaciones
+    if (estadoLocal?.estado === 'verificado') {
+        return estadoLocal;
+    }
+
+    // 2. Solo si NO está verificado localmente, revisar admin
     if (clave) {
-        // 1. ¿El admin revocó la verificación? — máxima prioridad
+        // ¿El admin revocó?
         const revocadas = JSON.parse(localStorage.getItem('verificacionesRevocadas') || '{}');
         if (revocadas[clave]) {
-            // Limpiar estado local y devolver sin_verificar con el motivo
             localStorage.removeItem('identidadVerificada');
             return {
-                estado:  'sin_verificar',
-                metodo:  null,
-                fecha:   null,
-                motivo:  revocadas[clave].motivo || 'El administrador solicitó nueva verificación'
+                estado: 'sin_verificar', metodo: null, fecha: null,
+                motivo: revocadas[clave].motivo || 'El administrador solicitó nueva verificación'
             };
         }
-
-        // 2. ¿El admin aprobó manualmente?
+        // ¿El admin aprobó manualmente?
         const aprobadas = JSON.parse(localStorage.getItem('verificacionesAprobadas') || '{}');
         if (aprobadas[clave]?.aprobado) {
             const verif = { estado: 'verificado', metodo: 'Aprobado por administrador',
@@ -32,9 +38,8 @@ function getVerificacion() {
         }
     }
 
-    // 3. Estado guardado localmente (QR, proceso normal)
-    const v = localStorage.getItem('identidadVerificada');
-    return v ? JSON.parse(v) : { estado: 'sin_verificar', metodo: null, fecha: null };
+    // 3. Estado local no verificado o sin estado
+    return estadoLocal || { estado: 'sin_verificar', metodo: null, fecha: null };
 }
 function setVerificacion(estado, metodo, extra = {}) {
     const data = { estado, metodo, fecha: new Date().toISOString(), ...extra };
@@ -488,15 +493,14 @@ async function ejecutarPasoB() {
                     'border-radius:8px;font-weight:700;cursor:pointer">' +
                     '✅ Ir a mi perfil</button>' +
                     '</div>';
-                showNotification('🎉 ¡Identidad verificada exitosamente!', 'success');
-                // Navegar al perfil después de 3 segundos
-                setTimeout(() => { if (typeof navigateTo === 'function') navigateTo('perfil'); }, 3000);
+                showNotification('🎉 ¡Identidad verificada! Redirigiendo...', 'success');
+                setTimeout(() => { navigateTo('perfil'); }, 2000);
             } else {
                 if (result) result.innerHTML =
                     '<div style="color:var(--color-success);font-size:.875rem;font-weight:700">' +
                     '✅ Cédula verificada correctamente</div>';
-                showNotification('🎉 ¡Identidad verificada!', 'success');
-                setTimeout(() => { if (typeof navigateTo === 'function') navigateTo('perfil'); }, 1500);
+                showNotification('🎉 ¡Identidad verificada! Redirigiendo al perfil...', 'success');
+                setTimeout(() => { navigateTo('perfil'); }, 1500);
             }
         } else {
             if (badge) { badge.className = 'verif-badge verif-error'; badge.textContent = '❌ Error'; }
