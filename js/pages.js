@@ -1468,6 +1468,10 @@ function renderAdminPanel() {
             <div class="action-card" onclick="navigateTo('admin-blog')">
                 <i data-lucide="book-open"></i><h3>Blog</h3><p>Publicar artículos</p>
             </div>
+            <div class="action-card" onclick="navigateTo('admin-empleo')" style="position:relative">
+                <i data-lucide="users"></i><h3>Empleo</h3><p>Postulaciones recibidas</p>
+                ${(()=>{const p=(typeof getEstadisticasEmpleo==='function'?getEstadisticasEmpleo():{nuevas:0});return p.nuevas>0?'<span style="position:absolute;top:.75rem;right:.75rem;background:#ef4444;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800">'+p.nuevas+'</span>':''})()}
+            </div>
             <div class="action-card" onclick="navigateTo('admin-verificaciones')" style="position:relative">
                 <i data-lucide="shield-check"></i><h3>Verificaciones</h3><p>Aprobar identidades</p>
                 ${(()=>{const p=(typeof getSolicitudesVerificacion==='function'?getSolicitudesVerificacion():[]).filter(s=>s.estado==='pendiente');return p.length>0?'<span style="position:absolute;top:.75rem;right:.75rem;background:#ef4444;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800">'+p.length+'</span>':''})()}
@@ -4475,4 +4479,219 @@ function revocarVerificacion() {
         'info'
     );
     switchFiltroVerif('resueltas');
+}
+
+// ========================================
+// GARANTÍAS — Documento formal
+// ========================================
+function renderGarantias() {
+    return `
+    <div class="fade-in" style="max-width:860px;margin:0 auto">
+
+        <!-- Cabecera oficial -->
+        <div style="background:var(--ink-900,#111118);border-radius:24px;
+                    padding:3rem 2rem;text-align:center;margin-bottom:2.5rem;
+                    position:relative;overflow:hidden">
+            <div style="position:absolute;inset:0;
+                background:radial-gradient(ellipse at 50% 0%,rgba(245,158,11,.12),transparent 60%)"></div>
+            <div style="position:relative;z-index:1">
+                <div style="width:64px;height:64px;background:linear-gradient(135deg,#f59e0b,#b45309);
+                    border-radius:16px;display:flex;align-items:center;justify-content:center;
+                    margin:0 auto 1.25rem;font-size:1.75rem">🛡️</div>
+                <h1 style="font-family:'Playfair Display',Georgia,serif;font-size:2.25rem;
+                    font-weight:800;color:#fff;margin-bottom:.5rem">
+                    Política de Garantías
+                </h1>
+                <p style="color:rgba(255,255,255,.55);font-size:.9rem;margin-bottom:1.5rem">
+                    Mueblería y Cerrajería "Benjamín" · Quito, Ecuador · Vigente desde Enero 2025
+                </p>
+                <div style="display:inline-flex;align-items:center;gap:.5rem;
+                    background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.25);
+                    color:#6ee7b7;padding:.4rem 1.1rem;border-radius:999px;
+                    font-size:.75rem;font-weight:700">
+                    ✅ Documento oficial del negocio
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen visual -->
+        <div class="grid grid-4 mb-4" style="gap:1rem">
+            ${[
+                ['🔨','6 meses','Mano de obra','En todos los trabajos'],
+                ['🪵','90 días','Materiales','Defectos de fabricación'],
+                ['🔒','1 año','Cerrajería','Herrajes y chapas instaladas'],
+                ['⚡','30 días','Ajustes','Correcciones sin costo'],
+            ].map(([ico,tiempo,tipo,desc]) => `
+            <div style="background:#fff;border-radius:14px;padding:1.25rem;text-align:center;
+                border:1px solid var(--ink-200,#e5e7eb);box-shadow:0 2px 8px rgba(0,0,0,.06)">
+                <div style="font-size:2rem;margin-bottom:.5rem">${ico}</div>
+                <div style="font-family:'Playfair Display',Georgia,serif;font-size:1.75rem;
+                    font-weight:700;color:#f59e0b;line-height:1">${tiempo}</div>
+                <div style="font-weight:800;font-size:.875rem;margin:.25rem 0">${tipo}</div>
+                <div style="font-size:.75rem;color:var(--ink-400,#6b7280)">${desc}</div>
+            </div>`).join('')}
+        </div>
+
+        <!-- Contenido legal -->
+        <div class="card mb-3">
+            <div class="card-body" style="padding:2rem">
+
+                <h2 style="font-size:1.1rem;font-weight:800;color:var(--ink-900,#0a0a0f);
+                    border-bottom:2px solid #fef3c7;padding-bottom:.5rem;margin-bottom:1rem">
+                    1. Alcance de la Garantía
+                </h2>
+                <p style="font-size:.875rem;color:var(--ink-600,#3f3f55);line-height:1.75;margin-bottom:.75rem">
+                    Mueblería y Cerrajería "Benjamín" garantiza todos sus trabajos contra defectos
+                    de fabricación, instalación incorrecta o fallas en los materiales suministrados
+                    por el taller, bajo las condiciones descritas en este documento.
+                </p>
+                <p style="font-size:.875rem;color:var(--ink-600,#3f3f55);line-height:1.75">
+                    La garantía es personal e intransferible, aplica únicamente al cliente
+                    que contrató el servicio, y cubre el trabajo específico descrito en la
+                    nota de venta correspondiente.
+                </p>
+
+                <h2 style="font-size:1.1rem;font-weight:800;color:var(--ink-900,#0a0a0f);
+                    border-bottom:2px solid #fef3c7;padding-bottom:.5rem;
+                    margin:1.75rem 0 1rem">
+                    2. Períodos de Garantía por Tipo de Trabajo
+                </h2>
+
+                ${[
+                    {
+                        tipo: '🪵 Carpintería en Madera',
+                        items: [
+                            ['Mano de obra (instalación, ensamble)', '6 meses'],
+                            ['Materiales (madera, tableros MDF/MDP)', '90 días por defectos de fabricación'],
+                            ['Herrajes (bisagras, jaladores, rieles)', '6 meses contra defectos de fábrica'],
+                            ['Ajustes y nivelación post-entrega', '30 días sin costo'],
+                        ]
+                    },
+                    {
+                        tipo: '🔒 Cerrajería y Puertas de Tol',
+                        items: [
+                            ['Soldadura y estructura metálica', '1 año'],
+                            ['Pintura electrostática / anticorrosiva', '6 meses contra descascarado'],
+                            ['Chapas y cerraduras instaladas por el taller', '1 año contra defectos'],
+                            ['Instalación y nivelación del marco', '6 meses'],
+                        ]
+                    },
+                    {
+                        tipo: '🏗️ Estructuras Metálicas',
+                        items: [
+                            ['Soldadura estructural certificada', '2 años'],
+                            ['Pintura anticorrosiva', '6 meses'],
+                            ['Cubiertas (zinc, policarbonato)', 'Según garantía del fabricante'],
+                            ['Instalación y anclajes', '1 año'],
+                        ]
+                    },
+                ].map(sec => `
+                <div style="background:var(--ink-50,#f9fafb);border-radius:10px;
+                    padding:1.25rem;margin-bottom:1rem">
+                    <h3 style="font-size:.9rem;font-weight:800;margin-bottom:.875rem;
+                        color:var(--ink-800,#1c1c27)">${sec.tipo}</h3>
+                    <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                        ${sec.items.map(([item,periodo],i) => `
+                        <tr style="border-bottom:1px solid var(--ink-200,#e5e7eb)">
+                            <td style="padding:.5rem .25rem;color:var(--ink-600,#3f3f55)">${item}</td>
+                            <td style="padding:.5rem .25rem;font-weight:700;color:#f59e0b;
+                                text-align:right;white-space:nowrap">${periodo}</td>
+                        </tr>`).join('')}
+                    </table>
+                </div>`).join('')}
+
+                <h2 style="font-size:1.1rem;font-weight:800;color:var(--ink-900,#0a0a0f);
+                    border-bottom:2px solid #fef3c7;padding-bottom:.5rem;margin:1.75rem 0 1rem">
+                    3. ¿Qué cubre la garantía?
+                </h2>
+                <ul style="font-size:.875rem;color:var(--ink-600,#3f3f55);line-height:2;
+                    padding-left:1.25rem">
+                    <li>Defectos en la soldadura o uniones realizadas por el taller</li>
+                    <li>Desalineación de puertas, cajones o piezas instaladas por nosotros</li>
+                    <li>Fallas en materiales que el taller adquirió y suministró</li>
+                    <li>Problemas de nivelación o ajuste que afecten el funcionamiento</li>
+                    <li>Pintura que se descascare en condiciones normales de uso</li>
+                    <li>Chapas o herrajes que fallen por defecto de instalación</li>
+                </ul>
+
+                <h2 style="font-size:1.1rem;font-weight:800;color:var(--ink-900,#0a0a0f);
+                    border-bottom:2px solid #fee2e2;padding-bottom:.5rem;margin:1.75rem 0 1rem">
+                    4. ¿Qué NO cubre la garantía?
+                </h2>
+                <ul style="font-size:.875rem;color:var(--ink-600,#3f3f55);line-height:2;
+                    padding-left:1.25rem">
+                    <li>Daños causados por uso indebido, golpes, humedad excesiva o negligencia</li>
+                    <li>Modificaciones realizadas por terceros sin autorización del taller</li>
+                    <li>Materiales suministrados por el propio cliente</li>
+                    <li>Desgaste normal por el uso cotidiano</li>
+                    <li>Daños causados por eventos externos (inundaciones, terremotos, incendios)</li>
+                    <li>Cambios de diseño o preferencias estéticas posteriores a la entrega</li>
+                    <li>Trabajos sin nota de venta oficial del taller</li>
+                </ul>
+
+                <h2 style="font-size:1.1rem;font-weight:800;color:var(--ink-900,#0a0a0f);
+                    border-bottom:2px solid #fef3c7;padding-bottom:.5rem;margin:1.75rem 0 1rem">
+                    5. ¿Cómo hacer válida la garantía?
+                </h2>
+                <div style="display:grid;gap:.75rem">
+                    ${[
+                        ['1', '📋 Presenta tu nota de venta', 'Ten a mano el número de tu nota de venta (puedes consultarla en tu perfil del sitio web).'],
+                        ['2', '📸 Documenta el problema', 'Toma fotos o video del defecto antes de intentar cualquier reparación.'],
+                        ['3', '📱 Contáctanos', 'Escribe al WhatsApp de soporte (+593 98 167 6646) o al maestro (+593 98 599 8615) describiendo el problema.'],
+                        ['4', '🔧 Visita técnica', 'Coordinaremos una visita para evaluar el problema sin costo dentro del período de garantía.'],
+                        ['5', '✅ Resolución', 'Reparamos o reemplazamos sin costo si el defecto está cubierto por la garantía.'],
+                    ].map(([num, titulo, desc]) => `
+                    <div style="display:flex;gap:1rem;align-items:flex-start">
+                        <div style="width:28px;height:28px;border-radius:50%;
+                            background:linear-gradient(135deg,#f59e0b,#b45309);
+                            display:flex;align-items:center;justify-content:center;
+                            color:#fff;font-weight:800;font-size:.8rem;flex-shrink:0">
+                            ${num}
+                        </div>
+                        <div>
+                            <div style="font-weight:700;font-size:.875rem;margin-bottom:.2rem">${titulo}</div>
+                            <div style="font-size:.8rem;color:var(--ink-400,#6b7280)">${desc}</div>
+                        </div>
+                    </div>`).join('')}
+                </div>
+
+                <h2 style="font-size:1.1rem;font-weight:800;color:var(--ink-900,#0a0a0f);
+                    border-bottom:2px solid #fef3c7;padding-bottom:.5rem;margin:1.75rem 0 1rem">
+                    6. Condiciones Generales
+                </h2>
+                <p style="font-size:.875rem;color:var(--ink-600,#3f3f55);line-height:1.75;margin-bottom:.75rem">
+                    El período de garantía comienza desde la fecha de entrega del trabajo, 
+                    registrada en la nota de venta. La garantía se hace efectiva únicamente
+                    presentando la nota de venta original o su número de referencia.
+                </p>
+                <p style="font-size:.875rem;color:var(--ink-600,#3f3f55);line-height:1.75;margin-bottom:.75rem">
+                    El taller se reserva el derecho de evaluar cada caso individualmente para
+                    determinar si el defecto está cubierto por esta política. En caso de disputa,
+                    se buscará una solución justa para ambas partes.
+                </p>
+                <p style="font-size:.875rem;color:var(--ink-600,#3f3f55);line-height:1.75">
+                    Esta política puede actualizarse. La versión vigente siempre estará disponible
+                    en nuestro sitio web.
+                </p>
+            </div>
+        </div>
+
+        <!-- CTA contacto -->
+        <div style="background:var(--ink-50,#f9fafb);border-radius:16px;padding:2rem;
+                    text-align:center;border:1px solid var(--ink-200,#e5e7eb)">
+            <h3 style="font-weight:800;margin-bottom:.5rem">¿Tienes un reclamo de garantía?</h3>
+            <p style="font-size:.875rem;color:var(--ink-400,#6b7280);margin-bottom:1.25rem">
+                Escríbenos directamente y lo resolvemos sin burocracia.
+            </p>
+            <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+                <a href="https://wa.me/593985998615?text=${encodeURIComponent('Hola, tengo un reclamo de garantía sobre mi trabajo.')}"
+                   target="_blank" class="btn btn-primary">
+                    <i data-lucide="message-circle"></i> WhatsApp Maestro
+                </a>
+                <button onclick="navigateTo('soporte')" class="btn btn-ghost">
+                    <i data-lucide="headphones"></i> Portal de Soporte
+                </button>
+            </div>
+        </div>
+    </div>`;
 }

@@ -110,6 +110,15 @@ async function navigateTo(page, param = null) {
         case 'verificacion-identidad':
             content = renderVerificacionIdentidad();
             break;
+        case 'empleo':
+            content = renderPortalEmpleo();
+            break;
+        case 'admin-empleo':
+            content = renderAdminEmpleo();
+            break;
+        case 'garantias':
+            content = renderGarantias();
+            break;
         case 'admin-testimonios':
             content = renderAdminTestimonios();
             break;
