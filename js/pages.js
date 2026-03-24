@@ -4,86 +4,174 @@
 
 // Página de Inicio
 function renderInicio() {
+    const testimoniosPublicos = (typeof getTestimoniosPublicos === 'function'
+        ? getTestimoniosPublicos() : testimonios).slice(0,3);
+
     return `
-        <div class="fade-in">
-            <!-- Hero -->
-            <div class="hero">
-                <div class="hero-content">
-                    <div class="logo-large">
-                        <div class="logo-icon-large">B</div>
-                    </div>
-                    <h1>Calidad y Seguridad<br/>para tu Hogar</h1>
-                    <p>Más de 20 años creando espacios únicos en Quito, Ecuador</p>
-                    <div class="hero-badges">
-                        <div class="badge">
-                            <i data-lucide="shield"></i>
-                            <span>Garantía Total</span>
-                        </div>
-                        <div class="badge">
-                            <i data-lucide="star"></i>
-                            <span>Maestro Artesano</span>
-                        </div>
-                        <div class="badge">
-                            <i data-lucide="wrench"></i>
-                            <span>Instalación Incluida</span>
-                        </div>
-                    </div>
-                    <button onclick="navigateTo('catalogo-muebleria-interior')" class="btn btn-primary btn-large">
+    <div class="fade-in">
+
+        <!-- ══ HERO CINEMATOGRÁFICO ══════════════════════════ -->
+        <div class="hero container">
+            <div class="hero-content">
+                <div class="hero-eyebrow">
+                    <i data-lucide="award" style="width:12px;height:12px"></i>
+                    Quito · Ecuador · Est. 2004
+                </div>
+                <h1>
+                    Artesanía de precisión
+                    <em>para tu hogar</em>
+                </h1>
+                <p>Más de 20 años transformando espacios con carpintería de
+                   alto nivel y cerrajería de seguridad. Cada pieza, a tu medida.</p>
+                <div class="hero-cta">
+                    <button onclick="navigateTo('catalogo-muebleria-interior')"
+                        class="btn btn-primary btn-large">
+                        <i data-lucide="layout-grid"></i>
                         Ver Catálogo Completo
-                        <i data-lucide="chevron-right"></i>
+                    </button>
+                    <button onclick="navigateTo('galeria')"
+                        class="btn btn-ghost btn-large">
+                        <i data-lucide="image"></i>
+                        Ver Proyectos
                     </button>
                 </div>
-            </div>
-
-            <!-- Servicios -->
-            <div class="grid grid-3 mb-4">
-                <div class="service-card service-amber" onclick="navigateTo('catalogo-muebleria-interior')">
-                    <i data-lucide="sofa"></i>
-                    <h3>Mueblería Interior</h3>
-                    <p>Puertas, cocinas, baños, closets y más</p>
-                    <i data-lucide="chevron-right" class="service-arrow"></i>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <div class="hero-stat-num">20+</div>
+                        <div class="hero-stat-label">Años de experiencia</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-num">500+</div>
+                        <div class="hero-stat-label">Proyectos entregados</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-num">100%</div>
+                        <div class="hero-stat-label">Garantía en mano de obra</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-num">⭐ 5.0</div>
+                        <div class="hero-stat-label">Calificación promedio</div>
+                    </div>
                 </div>
-                <div class="service-card service-dark" onclick="navigateTo('catalogo-muebleria-exterior')">
-                    <i data-lucide="door-open"></i>
-                    <h3>Mueblería Exterior</h3>
-                    <p>Puertas principales y portones de madera</p>
-                    <i data-lucide="chevron-right" class="service-arrow"></i>
-                </div>
-                <div class="service-card service-slate" onclick="navigateTo('catalogo-cerrajeria')">
-                    <i data-lucide="lock"></i>
-                    <h3>Cerrajería Exterior</h3>
-                    <p>Seguridad completa con puertas mixtas y rejas</p>
-                    <i data-lucide="chevron-right" class="service-arrow"></i>
-                </div>
-            </div>
-
-            <!-- Testimonios Mini -->
-            <div class="section">
-                <h2 class="section-title text-center">Lo Que Dicen Nuestros Clientes</h2>
-                <div class="grid grid-3">
-                    ${(typeof getTestimoniosPublicos === 'function'
-                        ? getTestimoniosPublicos()
-                        : testimonios
-                      ).slice(0,3).map(t => createTestimonialCardEnhanced ? createTestimonialCardEnhanced(t) : createTestimonialCard(t)).join('')}
-                </div>
-                <div class="text-center mt-3">
-                    <button onclick="navigateTo('testimonios')" class="btn btn-secondary">
-                        Ver Todos los Testimonios
-                        <i data-lucide="arrow-right"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- CTA Insignias -->
-            <div class="cta-box">
-                <i data-lucide="award" class="cta-icon"></i>
-                <h2>Sistema de Insignias y Recompensas</h2>
-                <p>Gana beneficios exclusivos, descuentos y guías con cada compra</p>
-                <button onclick="navigateTo('perfil')" class="btn btn-primary">
-                    ${getUser() ? 'Ver Mis Insignias' : 'Registrarme Ahora'}
-                </button>
             </div>
         </div>
+
+        <!-- ══ SERVICIOS ═════════════════════════════════════ -->
+        <div class="container">
+            <div class="section-header">
+                <span class="section-eyebrow">Nuestros servicios</span>
+                <h2 class="section-title">Todo lo que tu hogar necesita</h2>
+                <p class="section-sub">
+                    Desde muebles personalizados hasta sistemas de seguridad —
+                    fabricados en nuestro taller en Guamaní, Quito.
+                </p>
+            </div>
+
+            <div class="grid grid-3 mb-4">
+                <div class="service-card service-amber"
+                     onclick="navigateTo('catalogo-muebleria-interior')">
+                    <i data-lucide="sofa"></i>
+                    <h3>Mueblería Interior</h3>
+                    <p>Puertas, cocinas integrales, closets, baños y muebles a la medida exacta de tu espacio.</p>
+                    <div style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:700;opacity:.9">
+                        Ver productos <i data-lucide="chevron-right" class="service-arrow"></i>
+                    </div>
+                </div>
+                <div class="service-card service-dark"
+                     onclick="navigateTo('catalogo-muebleria-exterior')">
+                    <i data-lucide="door-open"></i>
+                    <h3>Mueblería Exterior</h3>
+                    <p>Puertas principales y portones de madera maciza con acabados premium y resistencia duradera.</p>
+                    <div style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:700;opacity:.9">
+                        Ver productos <i data-lucide="chevron-right" class="service-arrow"></i>
+                    </div>
+                </div>
+                <div class="service-card service-slate"
+                     onclick="navigateTo('catalogo-cerrajeria')">
+                    <i data-lucide="shield-check"></i>
+                    <h3>Cerrajería de Seguridad</h3>
+                    <p>Puertas de tol, rejas, portones y sistemas de seguridad que protegen lo que más valoras.</p>
+                    <div style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:700;opacity:.9">
+                        Ver productos <i data-lucide="chevron-right" class="service-arrow"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══ POR QUÉ ELEGIRNOS ══════════════════════════ -->
+            <div class="section-header mt-4">
+                <span class="section-eyebrow">¿Por qué Benjamín?</span>
+                <h2 class="section-title">Franquicia de confianza en Quito</h2>
+            </div>
+            <div class="grid grid-4 mb-4">
+                <div class="why-card">
+                    <div class="why-icon"><i data-lucide="shield-check"></i></div>
+                    <div>
+                        <h4>Garantía de 6 meses</h4>
+                        <p>En mano de obra y materiales. Si algo falla, lo resolvemos sin costo.</p>
+                    </div>
+                </div>
+                <div class="why-card">
+                    <div class="why-icon"><i data-lucide="ruler"></i></div>
+                    <div>
+                        <h4>A tu medida exacta</h4>
+                        <p>Visitamos tu espacio, tomamos medidas y fabricamos sin dejar milímetro al azar.</p>
+                    </div>
+                </div>
+                <div class="why-card">
+                    <div class="why-icon"><i data-lucide="clock"></i></div>
+                    <div>
+                        <h4>Entrega cumplida</h4>
+                        <p>Tiempos definidos desde el primer día. Sin sorpresas, sin retrasos injustificados.</p>
+                    </div>
+                </div>
+                <div class="why-card">
+                    <div class="why-icon"><i data-lucide="star"></i></div>
+                    <div>
+                        <h4>20+ años de trayectoria</h4>
+                        <p>Maestro artesano con décadas de experiencia en carpintería y cerrajería fina.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══ TESTIMONIOS ════════════════════════════════ -->
+            ${testimoniosPublicos.length > 0 ? `
+            <div class="section-header mt-4">
+                <span class="section-eyebrow">Testimonios</span>
+                <h2 class="section-title">Lo que dicen nuestros clientes</h2>
+            </div>
+            <div class="grid grid-3 mb-3">
+                ${testimoniosPublicos.map(t =>
+                    typeof createTestimonialCardEnhanced === 'function'
+                        ? createTestimonialCardEnhanced(t)
+                        : createTestimonialCard(t)
+                ).join('')}
+            </div>
+            <div class="text-center mb-4">
+                <button onclick="navigateTo('testimonios')" class="btn btn-ghost">
+                    Ver todos los testimonios
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </div>` : ''}
+
+            <!-- ══ CTA INSIGNIAS ══════════════════════════════ -->
+            <div class="cta-box">
+                <i data-lucide="award" class="cta-icon"></i>
+                <h2>Programa de Clientes Preferentes</h2>
+                <p>Acumula compras y desbloquea descuentos de hasta 35%, acceso a
+                   catálogo VIP y atención prioritaria.</p>
+                <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+                    <button onclick="navigateTo('perfil')" class="btn btn-primary btn-large">
+                        <i data-lucide="award"></i>
+                        ${getUser() ? 'Ver Mis Beneficios' : 'Unirme Ahora — Es Gratis'}
+                    </button>
+                    <button onclick="navigateTo('testimonios')" class="btn btn-ghost btn-large">
+                        <i data-lucide="star"></i>
+                        Ver Testimonios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     `;
 }
 

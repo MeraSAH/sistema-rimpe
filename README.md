@@ -1,946 +1,403 @@
-\# 🏗️ Mueblería y Cerrajería "Benjamín"
-
-
-
-Sitio web profesional para Mueblería y Cerrajería Benjamín - Guamaní, Quito, Ecuador
-
-
-
-\## 📁 Estructura del Proyecto
-
-
-
-```
-
-muebleria-benjamin/
-
-│
-
-├── index.html                 # Página principal
-
-│
-
-├── css/
-
-│   ├── styles.css            # Estilos principales
-
-│   └── responsive.css        # Estilos responsive
-
-│
-
-├── js/
-
-│   ├── data.js              # Datos (productos, insignias, testimonios)
-
-│   ├── storage.js           # Gestión de localStorage
-
-│   ├── ui.js                # Componentes de interfaz
-
-│   ├── pages.js             # Renderizado de páginas
-
-│   └── main.js              # Navegación y inicialización
-
-│
-
-└── README.md                # Este archivo
-
-```
-
-
-
-\## 🚀 Instalación
-
-
-
-\### Opción 1: Uso Local Simple
-
-
-
-1\. \*\*Descargar los archivos:\*\*
-
-&nbsp;  - Crea una carpeta llamada `muebleria-benjamin`
-
-&nbsp;  - Crea las subcarpetas `css` y `js`
-
-&nbsp;  - Descarga todos los archivos en sus respectivas ubicaciones
-
-
-
-2\. \*\*Abrir en VS Code:\*\*
-
-&nbsp;  ```bash
-
-&nbsp;  cd muebleria-benjamin
-
-&nbsp;  code .
-
-&nbsp;  ```
-
-
-
-3\. \*\*Abrir con Live Server:\*\*
-
-&nbsp;  - Instala la extensión "Live Server" en VS Code
-
-&nbsp;  - Click derecho en `index.html`
-
-&nbsp;  - Selecciona "Open with Live Server"
-
-
-
-\### Opción 2: Servidor HTTP Simple (Python)
-
-
-
-```bash
-
-\# Python 3
-
-cd muebleria-benjamin
-
-python -m http.server 8000
-
-```
-
-
-
-Luego abre: `http://localhost:8000`
-
-
-
-\### Opción 3: Node.js con http-server
-
-
-
-```bash
-
-\# Instalar http-server globalmente
-
-npm install -g http-server
-
-
-
-\# Ejecutar servidor
-
-cd muebleria-benjamin
-
-http-server -p 8000
-
-```
-
-
-
-\## ⚙️ Configuración
-
-
-
-\### Personalizar Datos de Contacto
-
-
-
-Edita el archivo `js/data.js` y busca la sección `contactInfo`:
-
-
-
-```javascript
-
-const contactInfo = {
-
-&nbsp;   whatsapp: '593985998615',        // Tu número de WhatsApp
-
-&nbsp;   email: 'mycbenjamin@gmail.com',  // Tu email
-
-&nbsp;   direccion: 'Guamaní, Quito - Ecuador',
-
-&nbsp;   mapa: 'https://maps.app.goo.gl/4ay1g87buAnreQvR7',
-
-&nbsp;   horario: 'Lunes a Viernes: 8:00 AM - 6:00 PM\\nSábados: 9:00 AM - 2:00 PM'
-
-};
-
-```
-
-
-
-\### Agregar/Modificar Productos
-
-
-
-En `js/data.js`, edita el objeto `productos`:
-
-
-
-```javascript
-
-const productos = {
-
-&nbsp;   muebleriaInterior: \[
-
-&nbsp;       {
-
-&nbsp;           id: 1,
-
-&nbsp;           nombre: 'Nombre del Producto',
-
-&nbsp;           precio: 135,
-
-&nbsp;           categoria: 'Categoría',
-
-&nbsp;           imagen: '🚪', // Emoji o ruta de imagen
-
-&nbsp;           colores: \['Color1', 'Color2'],
-
-&nbsp;           acabados: \['Acabado1', 'Acabado2'],
-
-&nbsp;           materiales: \['Material1', 'Material2']
-
-&nbsp;       }
-
-&nbsp;       // ... más productos
-
-&nbsp;   ]
-
-};
-
-```
-
-
-
-\### Modificar Sistema de Insignias
-
-
-
-Edita el array `insignias` en `js/data.js` para personalizar niveles, requisitos y beneficios.
-
-
-
-\## 🎨 Personalización de Estilos
-
-
-
-\### Colores Principales
-
-
-
-Edita las variables CSS en `css/styles.css`:
-
-
-
-```css
-
-:root {
-
-&nbsp;   --color-primary: #f59e0b;        /\* Dorado principal \*/
-
-&nbsp;   --color-primary-dark: #d97706;   /\* Dorado oscuro \*/
-
-&nbsp;   --color-secondary: #64748b;      /\* Gris plateado \*/
-
-&nbsp;   --color-accent: #eab308;         /\* Amarillo acento \*/
-
-&nbsp;   /\* ... más colores \*/
-
-}
-
-```
-
-
-
-\## 📱 Características
-
-
-
-\### Funcionalidades Principales
-
-
-
-\- ✅ \*\*Catálogo Interactivo\*\* - 3 categorías de productos
-
-\- ✅ \*\*Configurador de Productos\*\* - Personalización en tiempo real
-
-\- ✅ \*\*Sistema de Insignias\*\* - 13 niveles de recompensas
-
-\- ✅ \*\*Carrito de Cotización\*\* - Con cálculo de descuentos
-
-\- ✅ \*\*Integración WhatsApp\*\* - Envío directo de pedidos
-
-\- ✅ \*\*Registro de Usuarios\*\* - Con localStorage
-
-\- ✅ \*\*Galería de Proyectos\*\* - Portafolio visual
-
-\- ✅ \*\*Blog de Contenidos\*\* - Guías y consejos
-
-\- ✅ \*\*Responsive Design\*\* - Compatible con todos los dispositivos
-
-
-
-\### Páginas Disponibles
-
-
-
-1\. \*\*Inicio\*\* - Hero section y servicios destacados
-
-2\. \*\*Sobre Nosotros\*\* - Historia y valores
-
-3\. \*\*Catálogos\*\* (3 secciones):
-
-&nbsp;  - Mueblería Interior
-
-&nbsp;  - Mueblería Exterior
-
-&nbsp;  - Cerrajería Exterior
-
-4\. \*\*Perfil de Usuario\*\* - Insignias y estadísticas
-
-5\. \*\*Carrito\*\* - Cotización de productos
-
-6\. \*\*Galería\*\* - Proyectos realizados
-
-7\. \*\*Testimonios\*\* - Opiniones de clientes
-
-8\. \*\*Blog\*\* - Artículos y guías
-
-9\. \*\*Contacto\*\* - Información y formulario
-
-
-
-\## 🔧 Funciones de Desarrollo
-
-
-
-\### Consola de Debugging
-
-
-
-Abre la consola del navegador (F12) y usa:
-
-
-
-```javascript
-
-// Ver datos del usuario actual
-
-benjaminApp.getUser();
-
-
-
-// Ver carrito actual
-
-benjaminApp.getCart();
-
-
-
-// Cargar datos de prueba
-
-benjaminApp.loadTestData();
-
-
-
-// Limpiar todos los datos
-
-benjaminApp.clearAllData();
-
-
-
-// Navegar a una página
-
-benjaminApp.navigateTo('perfil');
-
-
-
-// Ver productos disponibles
-
-benjaminApp.productos;
-
-
-
-// Ver sistema de insignias
-
-benjaminApp.insignias;
-
-```
-
-
-
-\## 💾 Almacenamiento de Datos
-
-
-
-El sitio usa `localStorage` para persistir datos:
-
-
-
-\- \*\*benjaminUser\*\* - Datos del usuario registrado
-
-\- \*\*benjaminCart\*\* - Items en el carrito
-
-\- \*\*benjaminPedidos\*\* - Historial de pedidos
-
-
-
-Para ver los datos almacenados:
-
-
-
-```javascript
-
-// En la consola del navegador
-
-localStorage.getItem('benjaminUser');
-
-localStorage.getItem('benjaminCart');
-
-localStorage.getItem('benjaminPedidos');
-
-```
-
-
-
-\## 📱 WhatsApp Integration
-
-
-
-El sistema genera mensajes formateados automáticamente con:
-
-\- Detalles completos de productos
-
-\- Configuraciones seleccionadas
-
-\- Cálculo de precios aproximados
-
-\- Datos del cliente (si está registrado)
-
-\- Descuentos aplicables
-
-
-
-El número de WhatsApp se configura en `js/data.js` en el objeto `contactInfo`.
-
-
-
-\## 🌐 Despliegue en Producción
-
-
-
-\### GitHub Pages
-
-
-
-1\. Sube el proyecto a un repositorio de GitHub
-
-2\. Ve a Settings > Pages
-
-3\. Selecciona la rama `main` y carpeta `/root`
-
-4\. El sitio estará disponible en `https://tu-usuario.github.io/nombre-repo`
-
-
-
-\### Netlify
-
-
-
-1\. Arrastra la carpeta del proyecto a \[netlify.com/drop](https://app.netlify.com/drop)
-
-2\. O conecta tu repositorio de GitHub
-
-3\. El sitio se despliega automáticamente
-
-
-
-\### Vercel
-
-
-
-```bash
-
-\# Instalar Vercel CLI
-
-npm i -g vercel
-
-
-
-\# Desplegar
-
-cd muebleria-benjamin
-
-vercel
-
-```
-
-
-
-\## 🔐 Notas de Seguridad
-
-
-
-\- ⚠️ Los datos se almacenan en el navegador del usuario (localStorage)
-
-\- ⚠️ No hay autenticación real - solo almacenamiento local
-
-\- ⚠️ Para un sistema de producción completo, considera:
-
-&nbsp; - Backend con base de datos
-
-&nbsp; - Autenticación real
-
-&nbsp; - Procesamiento de pagos
-
-&nbsp; - Panel de administración
-
-# 🏗️ Mueblería y Cerrajería "Benjamín" - Sistema RIMPE
-
-Sistema web profesional para gestión de negocio bajo **régimen RIMPE Negocio Popular** en Ecuador.
-
-## 📋 **Características del Sistema**
-
-### **✅ Sistema COMPLETO para RIMPE**
-- **Emisión de Notas de Venta** (sin IVA)
-- **Control de ingresos anuales** ($20,000 límite)
-- **Panel de Administración** privado
-- **Consulta pública de notas** por cédula
-- **Generación automática de PDF**
-- **Historial completo** de transacciones
-
-### **🎯 Especialización del Negocio**
-- **Cerrajería:** Puertas de tol (calibre 14, 16, 18)
-- **Estructuras Metálicas:** Techos, cerramientos, mezzanines
-- **Carpintería:** Trabajos en madera personalizados
-
-### **💰 Costo: $0**
-- Hosting GRATIS (Vercel/Netlify)
-- Base de datos: localStorage (sin servidor)
-- Dominio gratuito incluido (.vercel.app)
+# 🏗️ Mueblería y Cerrajería "Benjamín"
+### Sistema Web Completo — Quito, Ecuador
+
+> Sitio web profesional con sistema RIMPE, catálogo interactivo, gestión de clientes,
+> verificación de identidad, seguimiento de pedidos y panel de administración completo.
 
 ---
 
-## 📁 **Estructura del Proyecto**
+## 📋 Índice
+
+1. [Resumen del Sistema](#resumen)
+2. [Estructura de Archivos](#estructura)
+3. [Instalación Local](#instalacion)
+4. [Deploy en Vercel](#deploy)
+5. [Configuración de Supabase](#supabase)
+6. [Módulos del Sistema](#modulos)
+7. [Panel de Administración](#admin)
+8. [Sistema de Clientes](#clientes)
+9. [Verificación de Identidad](#verificacion)
+10. [Sistema RIMPE](#rimpe)
+11. [Gestión de Imágenes](#imagenes)
+12. [Credenciales](#credenciales)
+13. [Comandos Git](#git)
+
+---
+
+## 📦 Resumen del Sistema {#resumen}
+
+| Módulo | Estado | Descripción |
+|---|---|---|
+| Catálogo de productos | ✅ | 3 categorías, configurador, carrito |
+| Sistema de cotización | ✅ | Carrito → WhatsApp automático |
+| Notas de venta RIMPE | ✅ | PDF profesional, estados, abonos |
+| Panel de administración | ✅ | Acceso con Ctrl+Shift+A |
+| Sistema de clientes | ✅ | Registro, insignias, descuentos |
+| Verificación de identidad | ✅ | Cédula EC (mod 10) + QR Registro Civil + WhatsApp |
+| Seguimiento de pedidos | ✅ | 4 estados con barra de progreso |
+| Testimonios moderados | ✅ | Cliente envía → admin aprueba/destaca/rechaza |
+| Blog y galería | ✅ | CRUD desde el admin |
+| Portal de soporte | ✅ | Quejas, reclamos, contacto |
+| Sync con Supabase | ✅ | Dual-write local + nube, throttle 60s |
+
+---
+
+## 📁 Estructura de Archivos {#estructura}
 
 ```
 muebleria-benjamin/
 │
-├── index.html                 # Página principal
+├── index.html              # SPA principal — toda la app vive aquí
 │
 ├── css/
-│   ├── styles.css            # Estilos principales
-│   └── responsive.css        # Estilos responsive + Admin
+│   ├── styles.css          # Variables CSS, componentes base
+│   └── responsive.css      # Responsive + estilos admin/perfil/verificación
 │
 ├── js/
-│   ├── data.js              # Productos, insignias, info RIMPE
-│   ├── storage.js           # Gestión de localStorage
-│   ├── admin.js             # Panel administrativo RIMPE
-│   ├── ui.js                # Componentes de interfaz
-│   ├── pages.js             # Renderizado de páginas
-│   └── main.js              # Navegación y inicialización
+│   ├── data.js             # Catálogo, insignias, info negocio (SIN testimonios hardcode)
+│   ├── storage.js          # localStorage: usuario, carrito, pedidos, insignias
+│   ├── admin.js            # RIMPE: notas de venta, CRUD, cálculos fiscales, PDF
+│   ├── supabase.js         # Auth cliente, sync Supabase, normalización snake→camelCase
+│   ├── verificacion.js     # Verificación identidad: módulo 10 + QR + WhatsApp admin
+│   ├── testimonios.js      # CRUD testimonios: envío, moderación, estadísticas
+│   ├── images.js           # Gestor centralizado de imágenes (rutas y fallbacks)
+│   ├── ui.js               # Componentes: tarjetas, carrito, menú mobile
+│   ├── pages.js            # Renderizado de todas las páginas (~4200 líneas)
+│   └── main.js             # Router SPA, navegación, throttle sync
 │
-└── README.md                # Este archivo
+├── img/                    # (crear manualmente — ver sección Imágenes)
+│   ├── logo/
+│   ├── hero/
+│   ├── galeria/
+│   ├── productos/
+│   ├── blog/
+│   └── equipo/
+│
+├── vercel.json             # Headers de seguridad y caché para Vercel
+├── schema.sql              # Esquema de tablas para Supabase
+├── GUIA_IMAGENES_Y_DEPLOY.md
+└── README.md               # Este archivo
 ```
 
 ---
 
-## 🚀 **Instalación Local**
+## 🚀 Instalación Local {#instalacion}
 
-### **Opción 1: VS Code + Live Server**
 ```bash
-# 1. Crear carpetas
-mkdir muebleria-benjamin
-cd muebleria-benjamin
-mkdir css js
+# 1. Clonar el repositorio
+git clone https://github.com/MeraSAH/sistema-rimpe.git
+cd sistema-rimpe
 
-# 2. Copiar todos los archivos en sus carpetas
-
-# 3. Abrir en VS Code
+# 2. Abrir en VS Code
 code .
 
-# 4. Instalar extensión "Live Server"
-# 5. Click derecho en index.html → "Open with Live Server"
+# 3. Instalar extensión "Live Server" en VS Code
+# 4. Click derecho en index.html → "Open with Live Server"
 ```
 
-### **Opción 2: Python HTTP Server**
-```bash
-cd muebleria-benjamin
-python -m http.server 8000
-# Abrir: http://localhost:8000
-```
+> ⚠️ **No abrir index.html directamente** con doble clic — el error
+> `Unsafe attempt to load URL file:///` es normal en local y desaparece en Vercel.
 
 ---
 
-## 🌐 **Despliegue GRATIS en Vercel/Netlify**
+## 🌐 Deploy en Vercel {#deploy}
 
-### **Opción A: Vercel (Recomendado)**
-
-#### **Paso 1: Preparar GitHub**
 ```bash
-# Dentro de la carpeta del proyecto
-git init
+# Subir cambios (lo único que necesitas hacer)
 git add .
-git commit -m "Sistema RIMPE Benjamín"
-
-# Crear repositorio en GitHub y subir
-git remote add origin https://github.com/TU-USUARIO/muebleria-benjamin.git
-git push -u origin main
+git commit -m "descripción del cambio"
+git push origin main
+# Vercel redespliega automáticamente en ~30 segundos
 ```
 
-#### **Paso 2: Desplegar en Vercel**
-1. Ve a [vercel.com](https://vercel.com)
-2. Regístrate con GitHub (gratis)
-3. Click "New Project"
-4. Importa tu repositorio `muebleria-benjamin`
-5. Click "Deploy"
-6. ¡Listo! Tu sitio estará en: `muebleria-benjamin.vercel.app`
+**URL del sitio:** `https://muebleria-benjamin.vercel.app`
 
-#### **Paso 3: Dominio Personalizado (Opcional - $8/año)**
-1. Compra `mycbenjamin.com` en Namecheap
-2. En Vercel → Settings → Domains
-3. Agrega tu dominio y sigue instrucciones DNS
-
-### **Opción B: Netlify**
-Similar a Vercel, arrastra la carpeta en [app.netlify.com/drop](https://app.netlify.com/drop)
+**Dashboard Vercel:** `https://vercel.com/dashboard`
 
 ---
 
-## ⚙️ **Configuración Inicial**
+## 🗄️ Configuración de Supabase {#supabase}
 
-### **1. Datos del Negocio (`js/data.js`)**
-```javascript
-const infoNegocio = {
-    nombreComercial: 'Mueblería y Cerrajería "Benjamín"',
-    propietario: 'Maestro Benjamín',
-    ruc: 'TU_RUC_AQUÍ', // ⚠️ IMPORTANTE: Agregar tu RUC
-    regimen: 'RIMPE - Negocio Popular',
-    direccion: 'Guamaní, Quito - Ecuador',
-    telefono: '+593 98 599 8615',
-    email: 'mycbenjamin@gmail.com',
-    whatsapp: '593985998615',
-    limiteAnual: 20000, // Límite RIMPE
-    serie: '001-001' // Serie de establecimiento
-};
+**URL:** `https://oyjdljacavhilwiqbyof.supabase.co`
+
+### Tablas requeridas
+Ejecutar `schema.sql` en **Supabase → SQL Editor**:
+
+```sql
+-- Ver archivo schema.sql en la raíz del proyecto
 ```
 
-### **2. Credenciales de Admin (`js/data.js`)**
-```javascript
-const adminCredentials = {
+### Desactivar confirmación de email
+Para que los clientes se registren sin esperar email:
+1. Supabase → **Authentication** → **Settings**
+2. **Email Auth** → desactivar **"Enable email confirmations"**
+
+### Crear usuario administrador
+1. Supabase → **Authentication** → **Users** → **Add user**
+2. Email: `mycbenjamin@gmail.com`
+3. Contraseña: la definida en `adminCredentials` de `data.js`
+
+---
+
+## 🧩 Módulos del Sistema {#modulos}
+
+### 🛍️ Catálogo y Carrito
+
+- **3 categorías:** Mueblería Interior, Mueblería Exterior, Cerrajería Exterior
+- Configurador en tiempo real: color, acabado, material, tipo de entrega
+- Tipo **Terminada:** incluye instalación y toma de medidas
+- Tipo **Rústica:** -15%, retiro en taller
+- Descuentos automáticos por insignia del cliente
+- Alerta de descuento por volumen (≥5 puertas)
+- Botón **Realizar Pedido por WhatsApp** → mensaje formateado automático
+
+### 📄 Blog y Galería
+
+- CRUD completo desde Admin → Blog / Galería
+- Galería: emoji + descripción + medidas + material + fecha
+- Blog: título + resumen + contenido + categoría + fecha
+
+---
+
+## 🔧 Panel de Administración {#admin}
+
+**Acceso:** `Ctrl + Shift + A` (no hay botón visible)
+
+### Módulos disponibles
+
+| Módulo | Ruta | Descripción |
+|---|---|---|
+| Dashboard | `admin-panel` | Estadísticas, alerta RIMPE, accesos rápidos |
+| Nueva Nota | `admin-nueva-nota` | Crear nota con autorelleno de clientes y selector de productos |
+| Historial | `admin-historial` | Todas las notas, filtros, editar, PDF |
+| Productos | `admin-productos` | CRUD catálogo de productos |
+| Clientes | `admin-clientes` | Clientes con notas + registrados, insignias, papelera |
+| Pedidos | `admin-pedidos` | Seguimiento: Por iniciar → En proceso → Listo → Entregado |
+| Verificaciones | `admin-verificaciones` | Aprobar/rechazar identidades por WhatsApp |
+| Testimonios | `admin-testimonios` | Pendiente → Aprobado → Destacado / Rechazado |
+| Galería | `admin-galeria` | CRUD proyectos |
+| Blog | `admin-blog` | CRUD artículos |
+| Estadísticas | `admin-estadisticas` | Gráfico mensual, control RIMPE |
+
+### Notas de Venta RIMPE
+
+```
+Serie: S 001-001-00
+Autorización SRI: 1133211394
+Régimen: RIMPE Negocio Popular — NO APLICA IVA
+Límite anual: $20,000 USD
+Alerta automática al alcanzar el 90% ($18,000)
+```
+
+**PDF incluye:**
+- Cabecera con datos del negocio y RUC
+- Número de nota y serie
+- Datos del cliente
+- Tabla de items con precios
+- Tabla de abonos si hay pagos parciales
+- Sello del negocio
+- Sello de estado (color según estado)
+- Marca de agua CANCELADO si corresponde
+- Datos de autorización SRI e imprenta
+
+---
+
+## 👥 Sistema de Clientes {#clientes}
+
+### Cómo se guardan los clientes
+
+Los clientes se registran en **dos fuentes** que `getClientesList()` fusiona:
+
+1. **`clientesRegistrados`** — se llena al crear cuenta en el sitio
+2. **`notasVenta`** — se construye automáticamente al emitir notas
+
+> Un cliente que se registra sin nota aparece en el admin. Un cliente
+> con nota pero sin cuenta también aparece. Ambas fuentes se unifican.
+
+### Sistema de Insignias
+
+| Nivel | Nombre | Compras mínimas | Descuento |
+|---|---|---|---|
+| Simple | 🥉 Bronce | 0 | 0% |
+| Simple | 🥈 Plata | 1 | 5% |
+| Simple | 🥇 Oro | 3 | 10% |
+| Premium | 💚 Esmeralda | 5 | 12% |
+| Premium | 💙 Zafiro | 8 | 15% |
+| Premium | ❤️ Rubí | 12 | 18% |
+| Premium | 💎 Diamante | 20 | 22% |
+| Elite | 🔱 Platino | 35 | 28% |
+| Elite | 👑 Maestro | Asignado | 35% |
+
+- El admin puede asignar insignias manualmente (aparece mensaje al cliente)
+- Fondo del perfil cambia según nivel: dorado (Simple), azul (Premium), violeta animado (Elite)
+
+### Papelera de Clientes
+
+- Eliminar cliente → va a papelera por 30 días
+- Admin puede restaurar o eliminar definitivamente
+- Las notas de venta **nunca se eliminan** (obligatorio RIMPE)
+
+---
+
+## 🔐 Verificación de Identidad {#verificacion}
+
+### Flujo de 3 pasos
+
+```
+PASO D (automático, gratis)
+Algoritmo módulo 10 — valida que la cédula ecuatoriana es matemáticamente válida
+Descarta cédulas inventadas al instante
+        ↓
+PASO B (automático, jsQR)
+Cliente sube foto del QR del reverso de su cédula
+jsQR lee el código → detecta URL del Registro Civil
+URL del dominio qr.registrocivil.gob.ec → VERIFICADO ✅
+        ↓ si falla
+PASO A (manual, WhatsApp)
+Mensaje automático al soporte: +593 981 676 646 (NO al maestro)
+Solicitud aparece en Admin → Verificaciones
+Admin revisa foto en WhatsApp y aprueba desde el panel
+```
+
+### Gestión desde el Admin
+
+- **Aprobar por cédula/email** → para solicitudes antiguas o sin cola
+- **Revocar** → cliente vuelve a `sin_verificar` y ve el motivo
+- El cliente es notificado en su próxima visita (sin necesidad de acción)
+
+### Números de teléfono
+
+| Número | Uso |
+|---|---|
+| `+593 98 599 8615` | Maestro — pedidos y cotizaciones de clientes |
+| `+593 98 167 6646` | Soporte — verificaciones de identidad y quejas |
+
+### Control de duplicados
+
+| Control | Quién lo aplica |
+|---|---|
+| Email duplicado | Supabase Auth (automático) |
+| Cédula inválida matemáticamente | Algoritmo módulo 10 |
+| QR no coincide con la cédula | jsQR |
+| Identidad sospechosa | Admin por WhatsApp manual |
+
+---
+
+## 📦 Sistema RIMPE {#rimpe}
+
+```
+Propietario: MERA MOREIRA GREGORIO MARCIAL
+RUC: 1311617086001
+Régimen: Contribuyente Negocio Popular — RIMPE
+Límite anual: $20,000 USD
+Serie: S 001-001-00
+Autorización SRI: 1133211394
+Imprenta: Grafila — autorización 14053
+Rango: Del 0000301 al 0000325
+Vigencia: 06/Enero/2026 — 06/Enero/2027
+```
+
+> ⚠️ El sistema **no realiza** la declaración ante el SRI ni el pago del 2% sobre ingresos.
+> Consulta con un contador para tus obligaciones específicas.
+
+---
+
+## 📸 Gestión de Imágenes {#imagenes}
+
+Todas las imágenes se gestionan desde `js/images.js`.
+
+### Estructura de carpetas
+
+```
+img/
+├── logo/           → logo-benjamin.png, favicon.ico
+├── hero/           → taller-principal.webp
+├── galeria/
+│   └── thumbs/    → versiones pequeñas (400×300px)
+├── productos/      → fotos del catálogo
+├── blog/           → miniaturas de artículos
+└── equipo/         → maestro y taller
+```
+
+### Tamaños recomendados
+
+| Sección | Tamaño | Formato | Peso máximo |
+|---|---|---|---|
+| Logo | 200×60px | PNG | 20KB |
+| Hero/Banner | 1920×600px | WebP | 500KB |
+| Galería | 1200×800px | WebP | 400KB |
+| Productos | 800×600px | WebP | 200KB |
+
+**Herramientas gratuitas:** [squoosh.app](https://squoosh.app) · [tinypng.com](https://tinypng.com)
+
+---
+
+## 🔑 Credenciales {#credenciales}
+
+> ⚠️ **Nunca subas este archivo con contraseñas reales a un repositorio público.**
+
+```js
+// js/data.js
+adminCredentials = {
     username: 'admin',
-    password: 'TU_CONTRASEÑA_SEGURA', // ⚠️ CAMBIAR ESTO
-    sessionTimeout: 3600000 // 1 hora
-};
-```
+    password: 'benjamin2024'  // ← CAMBIAR en producción
+}
 
-### **3. Contacto WhatsApp**
-El número `593985998615` aparece en múltiples lugares. Búscalo y cámbialo si es necesario.
-
----
-
-## 📱 **Funcionalidades del Sistema**
-
-### **🌍 PARTE PÚBLICA (Para Clientes)**
-
-#### **1. Catálogo de Exhibición**
-- Muestra trabajos realizados organizados por categoría
-- **No hay venta directa** - Solo exhibición
-- Botón de contacto directo por WhatsApp
-
-#### **2. Consulta de Notas de Venta**
-📍 Ruta: "Consultar Mis Notas" (footer)
-
-- Cliente ingresa su **cédula**
-- Ve todas sus notas de venta
-- Puede **descargar PDF** de cualquier nota
-
-#### **3. Galería de Proyectos**
-- Trabajos antes/después
-- Especificaciones técnicas
-- Materiales utilizados
-
----
-
-### **🔒 PANEL DE ADMINISTRACIÓN (Solo Propietario)**
-
-#### **Acceso al Panel**
-1. Click en "🔒 Admin" (footer)
-2. Usuario: `admin`
-3. Contraseña: La que configuraste
-4. Sesión válida por 1 hora
-
----
-
-#### **Dashboard Principal**
-
-**Estadísticas en Tiempo Real:**
-- ✅ **Ingresos Anuales** + % del límite RIMPE ($20,000)
-- ✅ **Ingresos del Mes** actual
-- ✅ **Total de Notas** emitidas
-- ✅ **Notas Pendientes** de pago
-
-**Alerta RIMPE:**
-- ⚠️ Si superas el 90% del límite anual, aparece alerta visual
-
----
-
-#### **Crear Nueva Nota de Venta**
-
-**Flujo Completo:**
-1. Ingresar datos del cliente (cédula obligatoria)
-2. Agregar items del trabajo:
-   - Cantidad
-   - Descripción detallada
-   - Precio unitario
-3. Aplicar descuento (opcional)
-4. Agregar observaciones
-5. Seleccionar estado de pago:
-   - Pendiente
-   - Pagada
-   - Parcial
-6. Click "Generar Nota"
-7. **Se genera automáticamente:**
-   - PDF profesional con todos los datos
-   - Se guarda en el sistema
-   - Numeración automática (001-001-000000001)
-
-**Formato del PDF:**
-```
-┌─────────────────────────────────────┐
-│  MUEBLERÍA Y CERRAJERÍA "BENJAMÍN"  │
-│  RUC: [Tu RUC]                      │
-│  Guamaní, Quito - Ecuador           │
-├─────────────────────────────────────┤
-│  NOTA DE VENTA No. 001-001-00000001 │
-│  RIMPE - Negocio Popular            │
-│  NO APLICA IVA                      │
-├─────────────────────────────────────┤
-│  DATOS DEL CLIENTE                  │
-│  Nombre: Juan Pérez                 │
-│  Cédula: 1234567890                 │
-│  Fecha: 28/02/2024                  │
-├─────────────────────────────────────┤
-│  DETALLE DEL TRABAJO                │
-│  1x Puerta de Tol calibre 18        │
-│     Incluye instalación             │
-│     Subtotal: $450.00               │
-├─────────────────────────────────────┤
-│  TOTAL: $450.00                     │
-│  _________________________________  │
-│  Firma del Cliente                  │
-└─────────────────────────────────────┘
+// js/supabase.js
+SUPABASE_URL = 'https://oyjdljacavhilwiqbyof.supabase.co'
+SUPABASE_KEY = 'sb_publishable_ydkUIr7Qa7mnOZ9MVZk8Kg_AD6yaHg-'
 ```
 
 ---
 
-#### **Historial de Notas**
+## 🌿 Comandos Git {#git}
 
-- Tabla completa de todas las notas emitidas
-- Filtros por estado (pendiente, pagada, parcial)
-- Ver detalles completos
-- Descargar PDF nuevamente
-- Información organizada:
-  - Número de nota
-  - Fecha de emisión
-  - Nombre del cliente
-  - Cédula
-  - Total
-  - Estado de pago
+```bash
+# Ver estado de cambios
+git status
 
----
+# Subir todos los cambios
+git add .
+git commit -m "descripción del cambio"
+git push origin main
 
-#### **Control RIMPE Automático**
+# Crear backup de los datos del localStorage (en consola del navegador)
+copy(localStorage.getItem('notasVenta'))
+# Pegar en un archivo .txt y guardar
 
-**El sistema calcula automáticamente:**
-- ✅ Total de ingresos del año fiscal
-- ✅ Porcentaje usado del límite ($20,000)
-- ✅ Margen disponible
-- ✅ Alerta si estás cerca del límite (>90%)
-
-**Ejemplo:**
-```
-Ingresos Anuales 2024: $15,450.00
-Límite RIMPE: $20,000.00
-Porcentaje Usado: 77.3%
-Margen Disponible: $4,550.00
-Estado: ✅ Dentro del límite
+# Ver historial de commits
+git log --oneline -10
 ```
 
 ---
 
-## 🔧 **Características Técnicas**
+## 🐛 Solución de Problemas
 
-### **Almacenamiento de Datos**
-Todo se guarda en el navegador del usuario (localStorage):
+| Problema | Solución |
+|---|---|
+| Menú mobile no abre | Actualizado en ui.js — onclick directo en el botón |
+| QR no se lee | jsQR ahora en index.html, prueba múltiples escalas |
+| Cliente queda en "verificando" | Usar Admin → Verificaciones → Aprobar por cédula |
+| Notas muestran fecha desconocida | supabase.js normaliza snake_case→camelCase |
+| Carrito no abre | Alias de seguridad createCartItem en pages.js |
+| Sync Supabase repetido | Throttle de 60s — solo sincroniza 1 vez por minuto |
+| No veo mis clientes | Se registran en clientesRegistrados + notas fusionadas |
+| Testimonio pendiente para siempre | Admin → Testimonios → tab Pendientes |
 
-**Datos almacenados:**
-- `notasVenta` - Todas las notas emitidas
-- `benjaminUser` - Usuario registrado (si aplica)
-- `benjaminCart` - Carrito temporal
-- `adminSession` - Sesión de administrador
+---
 
-**Ver datos guardados:**
-```javascript
-// En la consola del navegador (F12)
-JSON.parse(localStorage.getItem('notasVenta'))
+## 📞 Contacto del Negocio
+
 ```
-
-### **Seguridad**
-- ⚠️ **Importante:** Este sistema es básico y almacena datos localmente
-- Para producción REAL considera:
-  - Backend con base de datos real (MySQL/PostgreSQL)
-  - Autenticación robusta
-  - Encriptación de datos sensibles
-  - Backups automáticos
-
----
-
-## 📊 **Flujo de Trabajo Recomendado**
-
-### **Escenario 1: Cliente Nuevo**
-1. Cliente ve el catálogo web
-2. Le gusta un diseño de puerta de tol
-3. Click en botón WhatsApp
-4. Te contacta para cotización
-5. Vas a su domicilio, tomas medidas
-6. Acuerdan precio: $450
-7. Fabricas la puerta (7-10 días)
-8. **Al entregar:**
-   - Entras al panel admin
-   - Creas nueva nota de venta
-   - Generas PDF
-   - Se lo entregas impreso o por WhatsApp
-9. Cliente puede consultar su nota cuando quiera en la web
-
-### **Escenario 2: Control de Ingresos**
-1. Cada semana/mes revisas tu panel
-2. Ves cuánto has facturado en el año
-3. Si te acercas a $18,000 (90% del límite):
-   - ⚠️ El sistema te alerta
-   - Planificas para no superar $20,000
-   - O consideras cambiarte a otro régimen
-
----
-
-## 🛡️ **Cumplimiento Legal RIMPE**
-
-### **✅ Lo que SÍ hace el sistema:**
-- Genera Notas de Venta (NO facturas)
-- Indica claramente "RIMPE Negocio Popular"
-- Especifica "NO APLICA IVA"
-- Lleva registro de todos los ingresos
-- Alerta cuando te acercas al límite de $20,000
-
-### **⚠️ Lo que NO hace (debes hacer tú):**
-- Declaración de impuestos ante el SRI
-- Pago del impuesto a la renta (2% sobre ingresos)
-- Renovación de RUC/RISE
-- Asesoría contable
-
-**Recomendación:** Consulta con un contador para tus obligaciones específicas.
-
----
-
-## 📞 **Soporte Técnico**
-
-### **Consola de Debugging**
-Abre la consola del navegador (F12):
-
-```javascript
-// Ver todas las notas
-benjaminApp.getNotasVenta();
-
-// Calcular ingresos del año
-benjaminApp.calcularIngresosAnuales(2024);
-
-// Limpiar todos los datos (⚠️ cuidado)
-benjaminApp.clearAllData();
-```
-
-### **Problemas Comunes**
-
-**1. "No aparecen mis notas"**
-- Verifica que estés usando el mismo navegador
-- Los datos están en localStorage (solo en ese navegador)
-
-**2. "Olvidé mi contraseña de admin"**
-- Edita `js/data.js` y cambia el password
-- O usa la consola: `localStorage.removeItem('adminSession')`
-
-**3. "Quiero hacer backup"**
-```javascript
-// Copiar datos
-const backup = localStorage.getItem('notasVenta');
-console.log(backup); // Copiar y guardar en archivo .txt
+📍 Guamaní, Quito - Ecuador
+📱 +593 98 599 8615 (pedidos y cotizaciones)
+🛟 +593 98 167 6646 (soporte y verificaciones)
+📧 mycbenjamin@gmail.com
+🛟 mycbenjaminsoporte@gmail.com
+🌐 https://muebleria-benjamin.vercel.app
 ```
 
 ---
 
-## 🎯 **Próximas Mejoras**
-
-- [ ] Backend con base de datos real (Firebase/Supabase)
-- [ ] Envío automático de notas por email
-- [ ] Firma digital del cliente
-- [ ] Exportar reportes a Excel
-- [ ] App móvil (PWA)
-- [ ] Integración con sistema contable
-
----
-
-## 📄 **Licencia**
-
-Sistema de uso privado para Mueblería y Cerrajería "Benjamín".
-
----
-
-**Desarrollado con ❤️ para negocios RIMPE en Ecuador**
-
-© 2024 - Mueblería y Cerrajería "Benjamín"
-
-\## 🎯 Próximas Mejoras Sugeridas
-
-
-
-\- \[ ] Integración con API de pagos
-
-\- \[ ] Panel de administración
-
-\- \[ ] Base de datos real
-
-\- \[ ] Galería de imágenes reales
-
-\- \[ ] Chat en vivo
-
-\- \[ ] Sistema de notificaciones por email
-
-\- \[ ] Facturación automática
-
-\- \[ ] Tracking de pedidos en tiempo real
-
-
-
-\## 📞 Soporte
-
-
-
-Para dudas o soporte técnico:
-
-\- \*\*Email:\*\* mycbenjamin@gmail.com
-
-\- \*\*WhatsApp:\*\* +593 98 599 8615
-
-\- \*\*Ubicación:\*\* Guamaní, Quito - Ecuador
-
-
-
-\## 📄 Licencia
-
-
-
-Este proyecto es de código cerrado y propiedad de Mueblería y Cerrajería "Benjamín".
-
-
-
----
-
-
-
-\*\*Desarrollado con ❤️ para Mueblería y Cerrajería "Benjamín"\*\*
-
-
-
-© 2024 - Todos los derechos reservados
-
+*Última actualización: Marzo 2026*
+*Desarrollado para Mueblería y Cerrajería "Benjamín" — Quito, Ecuador*
