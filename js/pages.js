@@ -4510,6 +4510,1441 @@ function renderGarantias() {
                     color:#6ee7b7;padding:.4rem 1.1rem;border-radius:999px;
                     font-size:.75rem;font-weight:700">
                     ✅ Documento oficial del negocio
+
+// ============================================================
+// VIP CATALOG PAGES — AGREGAR AL FINAL DE pages.js
+// (antes del último cierre de comentarios o al final del archivo)
+// ============================================================
+
+// ── Hero del catálogo VIP (helper interno) ────────────────────
+function _renderVipHero(nivel, insignia) {
+    return `
+    <div style="background:linear-gradient(135deg,#0a0a0f 0%,#1a0533 50%,#0a0a0f 100%);
+        border-radius:24px;padding:3.5rem 2rem;text-align:center;
+        margin-bottom:2.5rem;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-30%;left:50%;transform:translateX(-50%);
+            width:500px;height:500px;
+            background:radial-gradient(circle,rgba(168,85,247,.18) 0%,transparent 65%);
+            border-radius:50%;pointer-events:none"></div>
+        <div style="position:absolute;inset:0;
+            background-image:linear-gradient(rgba(168,85,247,.04) 1px,transparent 1px),
+                             linear-gradient(90deg,rgba(168,85,247,.04) 1px,transparent 1px);
+            background-size:40px 40px;pointer-events:none"></div>
+        <div style="position:relative;z-index:2;max-width:640px;margin:0 auto">
+            <div style="display:inline-flex;align-items:center;gap:.5rem;
+                background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.25);
+                color:#c084fc;padding:.35rem 1.1rem;border-radius:999px;
+                font-size:.72rem;font-weight:700;letter-spacing:.12em;
+                text-transform:uppercase;margin-bottom:1.25rem">
+                🏆 Catálogo Exclusivo VIP
+            </div>
+            <h1 style="font-family:'Playfair Display',serif;
+                font-size:clamp(1.75rem,4vw,2.75rem);font-weight:800;
+                background:linear-gradient(135deg,#fff 30%,#c084fc 70%);
+                -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                line-height:1.2;letter-spacing:-.02em;margin-bottom:1rem">
+                Colección Exclusiva<br>para Clientes Preferentes
+            </h1>
+            <p style="color:rgba(255,255,255,.5);font-size:.9rem;line-height:1.7">
+                Diseños únicos, materiales de primera categoría y proyectos
+                que no encontrarás en el catálogo general.
+                Solo para clientes con insignia Premium o Elite.
+            </p>
+        </div>
+    </div>`;
+}
+
+// ── Tarjeta de producto VIP (helper interno) ──────────────────
+function _cardVIP(p, nivel) {
+    const esEliteProduct = p.nivelRequerido === 'Elite';
+    const colorAcento    = esEliteProduct ? '#a855f7' : '#f59e0b';
+    const gradBtn        = esEliteProduct
+        ? 'linear-gradient(135deg,#7c3aed,#a855f7)'
+        : 'linear-gradient(135deg,#b45309,#f59e0b)';
+
+    const colorsChips = (p.colores || []).map(c => {
+        const info = (typeof codigosColor !== 'undefined' && codigosColor[c]) ? codigosColor[c] : {};
+        return `<span title="${info.nombre || c}"
+            style="width:20px;height:20px;border-radius:50%;display:inline-block;
+                   background:${info.hex || '#888'};
+                   border:2px solid rgba(255,255,255,.15)"></span>`;
+    }).join('');
+
+    const waText = encodeURIComponent(
+        'Hola, soy cliente ' + (nivel||'VIP') + ' y quiero cotizar: ' + p.nombre + ' (' + p.codigo + ')'
+    );
+    const waNum = (typeof contactInfo !== 'undefined') ? contactInfo.whatsapp : '593985998615';
+
+    return `
+    <div style="background:#111118;border:1px solid ${colorAcento}33;border-radius:16px;
+         overflow:hidden;transition:all .25s;position:relative;display:flex;flex-direction:column"
+         onmouseover="this.style.borderColor='${colorAcento}77';this.style.transform='translateY(-4px)';this.style.boxShadow='0 16px 40px ${colorAcento}1a'"
+         onmouseout="this.style.borderColor='${colorAcento}33';this.style.transform='';this.style.boxShadow=''">
+
+        <!-- Badge nivel -->
+        <div style="position:absolute;top:.75rem;right:.75rem;z-index:2;
+            background:${gradBtn};color:#fff;font-size:.65rem;font-weight:800;
+            padding:3px 10px;border-radius:20px;letter-spacing:.05em">
+            ${esEliteProduct ? '⚡ ELITE' : '⭐ VIP'}
+        </div>
+
+        <!-- Imagen -->
+        ${p.imagenUrl ? `<img src="${p.imagenUrl}" alt="${p.nombre}"
+            style="width:100%;height:160px;object-fit:cover">` : `
+        <div style="height:160px;display:flex;align-items:center;justify-content:center;
+            font-size:4.5rem;background:linear-gradient(135deg,#1c1c27,#0d0d16);
+            border-bottom:1px solid ${colorAcento}22">
+            ${p.imagen || '📦'}
+        </div>`}
+
+        <div style="padding:1.25rem;flex:1;display:flex;flex-direction:column">
+            <div style="font-family:monospace;font-size:.68rem;color:${colorAcento};
+                font-weight:800;letter-spacing:1.5px;margin-bottom:.4rem">
+                ${p.codigo || ''}
+            </div>
+            <h3 style="color:#fff;font-size:.95rem;font-weight:800;
+                line-height:1.3;margin-bottom:.5rem">${p.nombre}</h3>
+
+            <!-- Precio -->
+            <div style="font-family:'Playfair Display',serif;font-size:1.4rem;
+                font-weight:800;color:${colorAcento};margin-bottom:.75rem">
+                ${p.precioLabel||'desde'} $${(p.precio||0).toLocaleString()}
+                <span style="font-family:'Inter',sans-serif;font-size:.72rem;
+                    color:rgba(255,255,255,.35);font-weight:400"> aprox.</span>
+            </div>
+
+            <!-- Descripción -->
+            <p style="font-size:.8rem;color:rgba(255,255,255,.5);
+                line-height:1.55;margin-bottom:.875rem;flex:1">
+                ${(p.descripcion||'').substring(0, 120)}...
+            </p>
+
+            <!-- Características VIP -->
+            <div style="margin-bottom:.875rem">
+                ${(p.caracteristicasVIP||[]).slice(0,4).map(c => `
+                <div style="display:flex;align-items:flex-start;gap:.4rem;
+                    font-size:.75rem;color:rgba(255,255,255,.6);margin-bottom:.3rem">
+                    <span style="color:${colorAcento};margin-top:1px;flex-shrink:0">✦</span>
+                    <span>${c}</span>
+                </div>`).join('')}
+            </div>
+
+            <!-- Colores -->
+            ${colorsChips ? `<div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.75rem">
+                ${colorsChips}</div>` : ''}
+
+            <!-- Tiempo fabricación -->
+            <div style="font-size:.7rem;color:rgba(255,255,255,.3);margin-bottom:.875rem">
+                🕐 ${p.tiempoFabricacion || '—'}
+            </div>
+
+            <!-- CTA -->
+            <a href="https://wa.me/${waNum}?text=${waText}" target="_blank"
+               style="display:flex;align-items:center;justify-content:center;gap:.5rem;
+                   padding:.65rem;border-radius:10px;background:${gradBtn};
+                   color:#fff;font-weight:700;font-size:.82rem;text-decoration:none;
+                   transition:opacity .2s"
+               onmouseover="this.style.opacity='.85'"
+               onmouseout="this.style.opacity='1'">
+                <i data-lucide="message-circle" style="width:14px;height:14px"></i>
+                Cotizar por WhatsApp
+            </a>
+        </div>
+    </div>`;
+}
+
+// ── Tarjeta bloqueada (preview difuminado) ────────────────────
+function _cardVIPBloqueada(p) {
+    const esElite   = p.nivelRequerido === 'Elite';
+    const label     = esElite ? '⚡ Exclusivo Elite' : '⭐ Exclusivo Premium';
+    const req       = esElite ? 'Requiere insignia Platino o superior' : 'Requiere insignia Esmeralda o superior';
+    const colorLine = esElite ? '#a855f7' : '#f59e0b';
+
+    return `
+    <div style="border-radius:16px;overflow:hidden;position:relative;
+        border:1px solid rgba(255,255,255,.06);background:#111118">
+        <!-- Contenido difuminado -->
+        <div style="filter:blur(5px) brightness(.35);pointer-events:none;user-select:none">
+            <div style="height:160px;background:#1c1c27;display:flex;
+                align-items:center;justify-content:center;font-size:4rem">
+                ${p.imagen}
+            </div>
+            <div style="padding:1.25rem">
+                <div style="height:.75rem;background:#2d2d3d;border-radius:4px;margin-bottom:.75rem;width:45%"></div>
+                <div style="height:1.1rem;background:#2d2d3d;border-radius:4px;margin-bottom:.5rem"></div>
+                <div style="height:1rem;background:#2d2d3d;border-radius:4px;margin-bottom:.5rem;width:75%"></div>
+                <div style="height:.8rem;background:#2d2d3d;border-radius:4px;width:55%"></div>
+            </div>
+        </div>
+        <!-- Overlay de bloqueo -->
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;
+            align-items:center;justify-content:center;
+            background:rgba(10,10,15,.55);text-align:center;padding:1.5rem">
+            <div style="width:48px;height:48px;background:rgba(255,255,255,.06);
+                border-radius:50%;display:flex;align-items:center;justify-content:center;
+                font-size:1.5rem;margin-bottom:.75rem">🔒</div>
+            <div style="color:#fff;font-weight:800;font-size:.875rem;margin-bottom:.3rem">
+                ${label}
+            </div>
+            <div style="font-size:.72rem;color:rgba(255,255,255,.4);margin-bottom:1.25rem;
+                border:1px solid ${colorLine}33;padding:4px 12px;border-radius:20px">
+                ${req}
+            </div>
+            <button onclick="navigateTo('perfil')"
+                style="padding:6px 18px;border-radius:20px;font-size:.75rem;font-weight:700;
+                background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+                color:rgba(255,255,255,.7);cursor:pointer">
+                Ver mis insignias
+            </button>
+        </div>
+    </div>`;
+}
+
+// ── PÁGINA PRINCIPAL: Catálogo VIP ────────────────────────────
+function renderCatalogoVIP() {
+    const user       = typeof getUser === 'function' ? getUser() : null;
+    const nivel      = typeof getNivelVIPUsuario === 'function' ? getNivelVIPUsuario() : null;
+    const puedeVer   = typeof puedeVerVIP === 'function' ? puedeVerVIP() : false;
+    const esElite    = typeof puedeVerVIPElite === 'function' ? puedeVerVIPElite() : false;
+    const insignia   = typeof calcularInsigniaActual === 'function' ? calcularInsigniaActual() : null;
+    const accesibles = puedeVer && typeof getProductosVIPAccesibles === 'function'
+        ? getProductosVIPAccesibles() : [];
+    const bloqueados = typeof getProductosVIPBloqueados === 'function'
+        ? getProductosVIPBloqueados() : [];
+
+    // ── Sin sesión ────────────────────────────────────────────
+    if (!user) {
+        return `
+        <div class="fade-in">
+            ${_renderVipHero()}
+            <div style="max-width:520px;margin:0 auto;text-align:center;padding:2rem 1rem">
+                <div style="font-size:3.5rem;margin-bottom:1rem">🔑</div>
+                <h2 style="color:var(--ink-900,#111);font-family:'Playfair Display',serif;
+                    font-size:1.6rem;margin-bottom:.75rem">Acceso Exclusivo</h2>
+                <p style="color:var(--ink-400,#6b7280);margin-bottom:2rem;line-height:1.65;font-size:.9rem">
+                    El catálogo VIP es exclusivo para clientes con insignia
+                    <strong>Esmeralda o superior</strong>.
+                    Crea tu cuenta gratis y empieza a acumular compras.
+                </p>
+                <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+                    <button onclick="navigateTo('perfil')" class="btn btn-primary">
+                        <i data-lucide="user-plus"></i> Crear Cuenta Gratis
+                    </button>
+                    <button onclick="navigateTo('catalogo-muebleria-interior')" class="btn btn-ghost">
+                        <i data-lucide="layout-grid"></i> Ver Catálogo General
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    // ── Logueado pero sin nivel VIP ───────────────────────────
+    if (!puedeVer) {
+        const comprasActuales        = user.compras || 0;
+        const comprasFaltanEsmeralda = Math.max(0, 5 - comprasActuales);
+        const pathInsignias = [
+            { icono:'💚', nombre:'Esmeralda', nivel:'Premium', compras:5,  color:'#10b981' },
+            { icono:'💙', nombre:'Zafiro',    nivel:'Premium', compras:8,  color:'#3b82f6' },
+            { icono:'🔱', nombre:'Platino',   nivel:'Elite',   compras:35, color:'#a855f7' },
+        ];
+        return `
+        <div class="fade-in">
+            ${_renderVipHero()}
+            <div style="max-width:640px;margin:0 auto;padding:0 1rem">
+
+                <!-- Estado actual del cliente -->
+                <div style="background:var(--color-white,#fff);border:2px solid var(--ink-200,#e5e7eb);
+                    border-radius:16px;padding:1.5rem;margin-bottom:1.75rem">
+                    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem">
+                        <span style="font-size:2.5rem">${insignia?.icono||'🥉'}</span>
+                        <div style="flex:1">
+                            <div style="font-weight:800;color:var(--ink-900,#111)">
+                                ${insignia?.nombre||'Bronce'} — ${insignia?.nivel||'Simple'}
+                            </div>
+                            <div style="font-size:.8rem;color:var(--ink-400,#9ca3af)">Tu insignia actual</div>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="font-size:1.75rem;font-weight:900;color:var(--gold-500,#f59e0b)">
+                                ${comprasActuales}
+                            </div>
+                            <div style="font-size:.72rem;color:var(--ink-400,#9ca3af)">compras</div>
+                        </div>
+                    </div>
+                    <div style="background:var(--ink-50,#f9fafb);border-radius:8px;
+                        padding:.875rem;text-align:center;
+                        border:1px dashed var(--gold-400,#fbbf24)">
+                        <span style="font-size:.85rem;color:var(--ink-600,#3f3f55)">
+                            🎯 Te faltan
+                            <strong style="color:var(--gold-600,#d97706)">
+                                ${comprasFaltanEsmeralda} compra${comprasFaltanEsmeralda!==1?'s':''}
+                            </strong>
+                            para desbloquear el catálogo VIP
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Path de insignias -->
+                <h3 style="font-family:'Playfair Display',serif;font-size:1.2rem;
+                    font-weight:800;text-align:center;margin-bottom:1.25rem;
+                    color:var(--ink-900,#111)">
+                    Cómo desbloquear el Catálogo VIP
+                </h3>
+                <div style="display:grid;gap:.75rem;margin-bottom:2rem">
+                    ${pathInsignias.map(ins => {
+                        const faltan        = Math.max(0, ins.compras - comprasActuales);
+                        const desbloqueado  = comprasActuales >= ins.compras;
+                        return `
+                        <div style="background:${desbloqueado ? ins.color + '14' : 'var(--ink-50,#f9fafb)'};
+                            border:1.5px solid ${desbloqueado ? ins.color + '55' : 'var(--ink-200,#e5e7eb)'};
+                            border-radius:12px;padding:1rem;
+                            display:flex;align-items:center;gap:1rem">
+                            <span style="font-size:2rem">${ins.icono}</span>
+                            <div style="flex:1">
+                                <div style="font-weight:700;font-size:.875rem;
+                                    color:var(--ink-800,#1c1c27)">${ins.nombre}</div>
+                                <div style="font-size:.75rem;color:var(--ink-400,#9ca3af)">
+                                    Nivel ${ins.nivel} · ${ins.compras} compras
+                                </div>
+                            </div>
+                            <div style="text-align:right;font-size:.8rem">
+                                ${desbloqueado
+                                    ? `<span style="color:${ins.color};font-weight:800">✅ Desbloqueado</span>`
+                                    : `<div style="color:var(--ink-400,#9ca3af)">${ins.compras} compras</div>
+                                       <div style="color:var(--gold-600,#d97706);font-weight:700">faltan ${faltan}</div>`
+                                }
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>
+
+                <!-- Preview bloqueado -->
+                <p style="text-align:center;font-size:.8rem;font-weight:700;
+                    color:var(--ink-400,#9ca3af);letter-spacing:.08em;
+                    text-transform:uppercase;margin-bottom:1rem">
+                    Vista previa — ${typeof productosVIP!=='undefined'?productosVIP.filter(p=>p.nivelRequerido==='Premium').length:7} productos exclusivos esperándote
+                </p>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+                    gap:1rem;margin-bottom:2rem">
+                    ${(typeof productosVIP!=='undefined'?productosVIP.filter(p=>p.nivelRequerido==='Premium').slice(0,4):[])
+                        .map(p => _cardVIPBloqueada(p)).join('')}
+                </div>
+
+                <div style="text-align:center">
+                    <button onclick="navigateTo('catalogo-muebleria-interior')" class="btn btn-ghost">
+                        Ver Catálogo General
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    // ── Usuario con acceso VIP ────────────────────────────────
+    const productosPremium = accesibles.filter(p => p.nivelRequerido === 'Premium');
+    const productosElite   = accesibles.filter(p => p.nivelRequerido === 'Elite');
+    const waNum = (typeof contactInfo !== 'undefined') ? contactInfo.whatsapp : '593985998615';
+    const descuento = insignia?.descuento || 0;
+
+    return `
+    <div class="fade-in">
+        ${_renderVipHero(nivel, insignia)}
+
+        <div style="max-width:1200px;margin:0 auto;padding:0 1rem">
+
+            <!-- Bienvenida personalizada -->
+            <div style="background:linear-gradient(135deg,#111118,#1c1c27);
+                border:1px solid rgba(245,158,11,.2);border-radius:16px;
+                padding:1.25rem 1.5rem;margin-bottom:2.5rem;
+                display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+                <span style="font-size:2.5rem">${insignia?.icono||'⭐'}</span>
+                <div style="flex:1;min-width:200px">
+                    <div style="color:#fff;font-weight:800;font-size:1rem">
+                        ¡Bienvenido, ${user.nombre}! — Acceso ${esElite ? '⚡ Elite' : '⭐ VIP Premium'}
+                    </div>
+                    <div style="font-size:.8rem;color:rgba(255,255,255,.4);margin-top:.2rem">
+                        ${esElite
+                            ? 'Tienes acceso completo a toda la colección, incluidos los diseños Elite exclusivos.'
+                            : `Tienes acceso a ${productosPremium.length} productos VIP Premium.${bloqueados.length > 0 ? ` ${bloqueados.length} productos Elite requieren insignia Platino.` : ''}`
+                        }
+                    </div>
+                </div>
+                ${descuento > 0 ? `
+                <div style="font-size:.78rem;color:#f59e0b;font-weight:800;
+                    background:rgba(245,158,11,.1);padding:5px 14px;border-radius:20px;
+                    border:1px solid rgba(245,158,11,.25);white-space:nowrap">
+                    🎉 ${descuento}% de descuento activo
+                </div>` : ''}
+            </div>
+
+            <!-- Sección Premium -->
+            ${productosPremium.length > 0 ? `
+            <div style="margin-bottom:3rem">
+                <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap">
+                    <h2 style="color:#fff;font-family:'Playfair Display',serif;
+                        font-size:1.35rem;font-weight:800">⭐ Colección VIP Premium</h2>
+                    <span style="font-size:.72rem;background:rgba(245,158,11,.12);
+                        color:#f59e0b;padding:3px 10px;border-radius:20px;
+                        font-weight:700;border:1px solid rgba(245,158,11,.22)">
+                        ${productosPremium.length} productos
+                    </span>
+                </div>
+                <div style="display:grid;
+                    grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1.25rem">
+                    ${productosPremium.map(p => _cardVIP(p, nivel)).join('')}
+                </div>
+            </div>` : ''}
+
+            <!-- Sección Elite (solo visible si es Elite) -->
+            ${esElite && productosElite.length > 0 ? `
+            <div style="margin-bottom:3rem">
+                <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap">
+                    <h2 style="font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:800;
+                        background:linear-gradient(135deg,#a855f7,#7c3aed);
+                        -webkit-background-clip:text;-webkit-text-fill-color:transparent">
+                        ⚡ Colección Elite Exclusiva
+                    </h2>
+                    <span style="font-size:.72rem;background:rgba(168,85,247,.12);
+                        color:#a855f7;padding:3px 10px;border-radius:20px;
+                        font-weight:700;border:1px solid rgba(168,85,247,.22)">
+                        ${productosElite.length} exclusivos
+                    </span>
+                </div>
+                <div style="display:grid;
+                    grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1.25rem">
+                    ${productosElite.map(p => _cardVIP(p, nivel)).join('')}
+                </div>
+            </div>` : ''}
+
+            <!-- Bloqueados Elite (visibles para Premium pero bloqueados) -->
+            ${!esElite && bloqueados.length > 0 ? `
+            <div style="margin-bottom:2.5rem">
+                <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem">
+                    <h3 style="color:rgba(255,255,255,.35);font-family:'Playfair Display',serif;
+                        font-size:1.1rem">🔒 Colección Elite — Requiere insignia Platino</h3>
+                </div>
+                <div style="display:grid;
+                    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;opacity:.8">
+                    ${bloqueados.slice(0,3).map(p => _cardVIPBloqueada(p)).join('')}
+                </div>
+            </div>` : ''}
+
+            <!-- CTA WhatsApp VIP -->
+            <div style="background:linear-gradient(135deg,#0d2b1a,#1a3d26);
+                border:1px solid rgba(16,185,129,.22);border-radius:20px;
+                padding:2rem;text-align:center;margin-bottom:2rem">
+                <div style="font-size:2rem;margin-bottom:.75rem">💬</div>
+                <h3 style="color:#fff;font-family:'Playfair Display',serif;
+                    font-size:1.2rem;margin-bottom:.5rem">
+                    ¿Necesitas asesoría personalizada?
+                </h3>
+                <p style="color:rgba(255,255,255,.5);font-size:.875rem;margin-bottom:1.25rem">
+                    Como cliente ${insignia?.nombre||'VIP'}, tienes atención preferencial
+                    directa con el Maestro Benjamín.
+                </p>
+                <a href="https://wa.me/${waNum}?text=${encodeURIComponent('Hola, soy cliente '+nivel+' ('+user.nombre+') y quisiera asesoría sobre el catálogo VIP.')}"
+                   target="_blank" class="btn btn-success">
+                    <i data-lucide="message-circle"></i>
+                    Atención Preferencial — WhatsApp
+                </a>
+            </div>
+
+        </div>
+    </div>`;
+}
+
+// ── ADMIN VIP: Sección de gestión de productos VIP ────────────
+// Esta función se llama desde renderAdminProductos() con el tab VIP activo
+function renderAdminVIPSection() {
+    const lista = typeof getProductosVIPAdmin === 'function'
+        ? getProductosVIPAdmin() : [];
+    const premiums = lista.filter(p => p.nivelRequerido === 'Premium');
+    const elites   = lista.filter(p => p.nivelRequerido === 'Elite');
+
+    return `
+    <div id="seccionVIP">
+        <div style="display:flex;justify-content:space-between;align-items:center;
+            margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem">
+            <div>
+                <h3 style="margin:0;font-size:1.1rem;font-weight:800">
+                    ⭐ Catálogo VIP — ${lista.length} productos
+                </h3>
+                <p style="font-size:.8rem;color:var(--ink-400,#6b7280);margin:.25rem 0 0">
+                    ${premiums.length} Premium · ${elites.length} Elite
+                </p>
+            </div>
+            <button onclick="abrirModalVIP(null)" class="btn btn-primary btn-sm">
+                <i data-lucide="plus"></i> Añadir Producto VIP
+            </button>
+        </div>
+
+        <!-- Premium -->
+        ${premiums.length > 0 ? `
+        <div class="card mb-3">
+            <div class="card-header-admin">
+                <h4 style="margin:0;font-size:.95rem">⭐ Nivel Premium — ${premiums.length} productos</h4>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-3">
+                    ${premiums.map(p => `
+                    <div class="producto-admin-card">
+                        <div class="producto-admin-header">
+                            <span class="producto-icono">${p.imagenUrl
+                                ? `<img src="${p.imagenUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:8px">`
+                                : p.imagen}</span>
+                            <div>
+                                <h5 style="margin:0;font-size:.85rem">${p.nombre}</h5>
+                                <span style="font-size:.7rem;color:var(--color-primary,#f59e0b);font-weight:700">
+                                    Desde $${(p.precio||0).toLocaleString()}
+                                </span>
+                                <div style="font-family:monospace;font-size:.65rem;
+                                    color:var(--ink-400,#9ca3af)">${p.codigo||p.id}</div>
+                            </div>
+                        </div>
+                        <div class="producto-admin-footer">
+                            <button onclick="abrirModalVIP('${p.id}')"
+                                class="btn btn-secondary btn-sm">
+                                <i data-lucide="edit-2"></i> Editar
+                            </button>
+                            <button onclick="confirmarEliminarVIP('${p.id}','${p.nombre.replace(/'/g,'')}')"
+                                class="btn btn-danger btn-sm">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                        </div>
+                    </div>`).join('')}
+                </div>
+            </div>
+        </div>` : ''}
+
+        <!-- Elite -->
+        ${elites.length > 0 ? `
+        <div class="card mb-3">
+            <div class="card-header-admin" style="background:linear-gradient(135deg,#5b21b6,#7c3aed)">
+                <h4 style="margin:0;font-size:.95rem">⚡ Nivel Elite — ${elites.length} productos</h4>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-3">
+                    ${elites.map(p => `
+                    <div class="producto-admin-card" style="border:2px solid rgba(168,85,247,.2)">
+                        <div class="producto-admin-header">
+                            <span class="producto-icono">${p.imagenUrl
+                                ? `<img src="${p.imagenUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:8px">`
+                                : p.imagen}</span>
+                            <div>
+                                <h5 style="margin:0;font-size:.85rem">${p.nombre}</h5>
+                                <span style="font-size:.7rem;color:#a855f7;font-weight:700">
+                                    Desde $${(p.precio||0).toLocaleString()}
+                                </span>
+                                <div style="font-family:monospace;font-size:.65rem;color:var(--ink-400,#9ca3af)">
+                                    ${p.codigo||p.id}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="producto-admin-footer">
+                            <button onclick="abrirModalVIP('${p.id}')"
+                                class="btn btn-secondary btn-sm">
+                                <i data-lucide="edit-2"></i> Editar
+                            </button>
+                            <button onclick="confirmarEliminarVIP('${p.id}','${p.nombre.replace(/'/g,'')}')"
+                                class="btn btn-danger btn-sm">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                        </div>
+                    </div>`).join('')}
+                </div>
+            </div>
+        </div>` : ''}
+
+        ${lista.length === 0 ? `
+        <div class="alert alert-warning">
+            <i data-lucide="star"></i>
+            <p>No hay productos VIP. Agrega el primero con el botón "Añadir Producto VIP".</p>
+        </div>` : ''}
+
+        <!-- Modal VIP -->
+        <div id="modalVIP" class="modal-overlay hidden">
+            <div class="modal-content" style="max-width:560px">
+                <div class="modal-header">
+                    <h2 id="modalVIPTitulo">Producto VIP</h2>
+                    <button class="btn-close" onclick="document.getElementById('modalVIP').classList.add('hidden')">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalVIPBody"></div>
+            </div>
+        </div>
+    </div>`;
+}
+
+// ── Modal VIP ────────────────────────────────────────────────
+function abrirModalVIP(id) {
+    const lista = typeof getProductosVIPAdmin === 'function' ? getProductosVIPAdmin() : [];
+    const p     = id ? lista.find(x => x.id === id) : null;
+
+    document.getElementById('modalVIPTitulo').textContent = p ? 'Editar Producto VIP' : 'Nuevo Producto VIP';
+    document.getElementById('modalVIPBody').innerHTML = `
+    <div class="grid grid-2">
+        <div class="form-group">
+            <label class="form-label">Nombre *</label>
+            <input type="text" id="vipNombre" class="form-input" value="${p?.nombre||''}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Código</label>
+            <input type="text" id="vipCodigo" class="form-input"
+                value="${p?.codigo||''}" placeholder="PMT-V01"
+                style="font-family:monospace;text-transform:uppercase">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Precio base ($) *</label>
+            <input type="number" id="vipPrecio" class="form-input" min="1" value="${p?.precio||''}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Nivel Requerido *</label>
+            <select id="vipNivel" class="form-select">
+                <option value="Premium" ${(p?.nivelRequerido||'Premium')==='Premium'?'selected':''}>⭐ Premium (Esmeralda+)</option>
+                <option value="Elite"   ${p?.nivelRequerido==='Elite'?'selected':''}>⚡ Elite (Platino+)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Emoji / ícono</label>
+            <input type="text" id="vipEmoji" class="form-input" value="${p?.imagen||'📦'}" maxlength="4">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Tiempo de fabricación</label>
+            <input type="text" id="vipTiempo" class="form-input"
+                value="${p?.tiempoFabricacion||''}" placeholder="15–20 días hábiles">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Categoría</label>
+        <input type="text" id="vipCategoria" class="form-input"
+            value="${p?.categoria||''}" placeholder="Mueblería Interior VIP">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Descripción *</label>
+        <textarea id="vipDesc" class="form-textarea" rows="3">${p?.descripcion||''}</textarea>
+    </div>
+    <div class="form-group">
+        <label class="form-label">
+            Características VIP <small style="color:var(--ink-400);font-weight:400">(una por línea)</small>
+        </label>
+        <textarea id="vipCaract" class="form-textarea" rows="4"
+            placeholder="Herrajes Blum Austria importados
+Diseño personalizado incluido">${(p?.caracteristicasVIP||[]).join('\n')}</textarea>
+    </div>
+    <div class="form-group">
+        <label class="form-label">
+            Colores (códigos separados por coma)
+            <small style="color:var(--ink-400);font-weight:400">C001, C003...</small>
+        </label>
+        <input type="text" id="vipColores" class="form-input"
+            value="${(p?.colores||[]).join(', ')}"
+            placeholder="C001, C003, C008" style="font-family:monospace">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Acabados (separados por coma)</label>
+        <input type="text" id="vipAcabados" class="form-input" value="${(p?.acabados||[]).join(', ')}">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Materiales (separados por coma)</label>
+        <input type="text" id="vipMateriales" class="form-input" value="${(p?.materiales||[]).join(', ')}">
+    </div>
+    <div class="flex gap-2 mt-3">
+        <button onclick="guardarProductoVIP('${id||''}')" class="btn btn-primary" style="flex:1">
+            <i data-lucide="save"></i> Guardar
+        </button>
+        <button onclick="document.getElementById('modalVIP').classList.add('hidden')"
+            class="btn btn-secondary">Cancelar</button>
+    </div>`;
+
+    document.getElementById('modalVIP').classList.remove('hidden');
+    lucide.createIcons();
+}
+
+function guardarProductoVIP(id) {
+    const nombre = document.getElementById('vipNombre').value.trim();
+    const precio = parseFloat(document.getElementById('vipPrecio').value);
+    const desc   = document.getElementById('vipDesc').value.trim();
+    if (!nombre || !precio || !desc) {
+        showNotification('Completa los campos obligatorios', 'error'); return;
+    }
+    const data = {
+        nombre,
+        codigo:           document.getElementById('vipCodigo').value.trim().toUpperCase(),
+        precio,
+        nivelRequerido:   document.getElementById('vipNivel').value,
+        imagen:           document.getElementById('vipEmoji').value.trim() || '📦',
+        categoria:        document.getElementById('vipCategoria').value.trim(),
+        descripcion:      desc,
+        tiempoFabricacion:document.getElementById('vipTiempo').value.trim(),
+        caracteristicasVIP: document.getElementById('vipCaract').value.split('\n').map(s=>s.trim()).filter(Boolean),
+        colores:          document.getElementById('vipColores').value.split(',').map(s=>s.trim()).filter(Boolean),
+        acabados:         document.getElementById('vipAcabados').value.split(',').map(s=>s.trim()).filter(Boolean),
+        materiales:       document.getElementById('vipMateriales').value.split(',').map(s=>s.trim()).filter(Boolean),
+        imagenUrl:        '',
+        precioLabel:      'desde',
+    };
+
+    if (id) {
+        updateProductoVIPAdmin(id, data);
+        showNotification('✅ Producto VIP actualizado', 'success');
+    } else {
+        addProductoVIPAdmin(data);
+        showNotification('✅ Producto VIP añadido', 'success');
+    }
+
+    document.getElementById('modalVIP').classList.add('hidden');
+    // Re-render la sección VIP
+    const sec = document.getElementById('seccionVIP');
+    if (sec) sec.outerHTML = renderAdminVIPSection();
+    else navigateTo('admin-productos');
+    lucide.createIcons();
+}
+
+function confirmarEliminarVIP(id, nombre) {
+    if (!confirm(`¿Eliminar el producto VIP "${nombre}"?`)) return;
+    deleteProductoVIPAdmin(id);
+    showNotification('Producto VIP eliminado', 'info');
+    const sec = document.getElementById('seccionVIP');
+    if (sec) sec.outerHTML = renderAdminVIPSection();
+    else navigateTo('admin-productos');
+    lucide.createIcons();
+}
+
+// ── Switcher de tabs admin productos ─────────────────────────
+// Llamado desde los botones de tab en renderAdminProductos()
+function switchAdminProductosTab(tab) {
+    const secGeneral = document.getElementById('tabGeneral');
+    const secVIP     = document.getElementById('tabVIP');
+    const btnGeneral = document.getElementById('btnTabGeneral');
+    const btnVIP     = document.getElementById('btnTabVIP');
+    if (tab === 'vip') {
+        if (secGeneral) secGeneral.classList.add('hidden');
+        if (secVIP)     secVIP.classList.remove('hidden');
+        if (btnGeneral) { btnGeneral.style.background='transparent'; btnGeneral.style.color='var(--ink-600,#3f3f55)'; }
+        if (btnVIP)     { btnVIP.style.background='var(--gold-500,#f59e0b)'; btnVIP.style.color='#fff'; }
+    } else {
+        if (secVIP)     secVIP.classList.add('hidden');
+        if (secGeneral) secGeneral.classList.remove('hidden');
+        if (btnVIP)     { btnVIP.style.background='transparent'; btnVIP.style.color='var(--ink-600,#3f3f55)'; }
+        if (btnGeneral) { btnGeneral.style.background='var(--gold-500,#f59e0b)'; btnGeneral.style.color='#fff'; }
+    }
+}
+// ============================================================
+// VIP CATALOG PAGES — AGREGAR AL FINAL DE pages.js
+// (antes del último cierre de comentarios o al final del archivo)
+// ============================================================
+
+// ── Hero del catálogo VIP (helper interno) ────────────────────
+function _renderVipHero(nivel, insignia) {
+    return `
+    <div style="background:linear-gradient(135deg,#0a0a0f 0%,#1a0533 50%,#0a0a0f 100%);
+        border-radius:24px;padding:3.5rem 2rem;text-align:center;
+        margin-bottom:2.5rem;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-30%;left:50%;transform:translateX(-50%);
+            width:500px;height:500px;
+            background:radial-gradient(circle,rgba(168,85,247,.18) 0%,transparent 65%);
+            border-radius:50%;pointer-events:none"></div>
+        <div style="position:absolute;inset:0;
+            background-image:linear-gradient(rgba(168,85,247,.04) 1px,transparent 1px),
+                             linear-gradient(90deg,rgba(168,85,247,.04) 1px,transparent 1px);
+            background-size:40px 40px;pointer-events:none"></div>
+        <div style="position:relative;z-index:2;max-width:640px;margin:0 auto">
+            <div style="display:inline-flex;align-items:center;gap:.5rem;
+                background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.25);
+                color:#c084fc;padding:.35rem 1.1rem;border-radius:999px;
+                font-size:.72rem;font-weight:700;letter-spacing:.12em;
+                text-transform:uppercase;margin-bottom:1.25rem">
+                🏆 Catálogo Exclusivo VIP
+            </div>
+            <h1 style="font-family:'Playfair Display',serif;
+                font-size:clamp(1.75rem,4vw,2.75rem);font-weight:800;
+                background:linear-gradient(135deg,#fff 30%,#c084fc 70%);
+                -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                line-height:1.2;letter-spacing:-.02em;margin-bottom:1rem">
+                Colección Exclusiva<br>para Clientes Preferentes
+            </h1>
+            <p style="color:rgba(255,255,255,.5);font-size:.9rem;line-height:1.7">
+                Diseños únicos, materiales de primera categoría y proyectos
+                que no encontrarás en el catálogo general.
+                Solo para clientes con insignia Premium o Elite.
+            </p>
+        </div>
+    </div>`;
+}
+
+// ── Tarjeta de producto VIP (helper interno) ──────────────────
+function _cardVIP(p, nivel) {
+    const esEliteProduct = p.nivelRequerido === 'Elite';
+    const colorAcento    = esEliteProduct ? '#a855f7' : '#f59e0b';
+    const gradBtn        = esEliteProduct
+        ? 'linear-gradient(135deg,#7c3aed,#a855f7)'
+        : 'linear-gradient(135deg,#b45309,#f59e0b)';
+
+    const colorsChips = (p.colores || []).map(c => {
+        const info = (typeof codigosColor !== 'undefined' && codigosColor[c]) ? codigosColor[c] : {};
+        return `<span title="${info.nombre || c}"
+            style="width:20px;height:20px;border-radius:50%;display:inline-block;
+                   background:${info.hex || '#888'};
+                   border:2px solid rgba(255,255,255,.15)"></span>`;
+    }).join('');
+
+    const waText = encodeURIComponent(
+        'Hola, soy cliente ' + (nivel||'VIP') + ' y quiero cotizar: ' + p.nombre + ' (' + p.codigo + ')'
+    );
+    const waNum = (typeof contactInfo !== 'undefined') ? contactInfo.whatsapp : '593985998615';
+
+    return `
+    <div style="background:#111118;border:1px solid ${colorAcento}33;border-radius:16px;
+         overflow:hidden;transition:all .25s;position:relative;display:flex;flex-direction:column"
+         onmouseover="this.style.borderColor='${colorAcento}77';this.style.transform='translateY(-4px)';this.style.boxShadow='0 16px 40px ${colorAcento}1a'"
+         onmouseout="this.style.borderColor='${colorAcento}33';this.style.transform='';this.style.boxShadow=''">
+
+        <!-- Badge nivel -->
+        <div style="position:absolute;top:.75rem;right:.75rem;z-index:2;
+            background:${gradBtn};color:#fff;font-size:.65rem;font-weight:800;
+            padding:3px 10px;border-radius:20px;letter-spacing:.05em">
+            ${esEliteProduct ? '⚡ ELITE' : '⭐ VIP'}
+        </div>
+
+        <!-- Imagen -->
+        ${p.imagenUrl ? `<img src="${p.imagenUrl}" alt="${p.nombre}"
+            style="width:100%;height:160px;object-fit:cover">` : `
+        <div style="height:160px;display:flex;align-items:center;justify-content:center;
+            font-size:4.5rem;background:linear-gradient(135deg,#1c1c27,#0d0d16);
+            border-bottom:1px solid ${colorAcento}22">
+            ${p.imagen || '📦'}
+        </div>`}
+
+        <div style="padding:1.25rem;flex:1;display:flex;flex-direction:column">
+            <div style="font-family:monospace;font-size:.68rem;color:${colorAcento};
+                font-weight:800;letter-spacing:1.5px;margin-bottom:.4rem">
+                ${p.codigo || ''}
+            </div>
+            <h3 style="color:#fff;font-size:.95rem;font-weight:800;
+                line-height:1.3;margin-bottom:.5rem">${p.nombre}</h3>
+
+            <!-- Precio -->
+            <div style="font-family:'Playfair Display',serif;font-size:1.4rem;
+                font-weight:800;color:${colorAcento};margin-bottom:.75rem">
+                ${p.precioLabel||'desde'} $${(p.precio||0).toLocaleString()}
+                <span style="font-family:'Inter',sans-serif;font-size:.72rem;
+                    color:rgba(255,255,255,.35);font-weight:400"> aprox.</span>
+            </div>
+
+            <!-- Descripción -->
+            <p style="font-size:.8rem;color:rgba(255,255,255,.5);
+                line-height:1.55;margin-bottom:.875rem;flex:1">
+                ${(p.descripcion||'').substring(0, 120)}...
+            </p>
+
+            <!-- Características VIP -->
+            <div style="margin-bottom:.875rem">
+                ${(p.caracteristicasVIP||[]).slice(0,4).map(c => `
+                <div style="display:flex;align-items:flex-start;gap:.4rem;
+                    font-size:.75rem;color:rgba(255,255,255,.6);margin-bottom:.3rem">
+                    <span style="color:${colorAcento};margin-top:1px;flex-shrink:0">✦</span>
+                    <span>${c}</span>
+                </div>`).join('')}
+            </div>
+
+            <!-- Colores -->
+            ${colorsChips ? `<div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.75rem">
+                ${colorsChips}</div>` : ''}
+
+            <!-- Tiempo fabricación -->
+            <div style="font-size:.7rem;color:rgba(255,255,255,.3);margin-bottom:.875rem">
+                🕐 ${p.tiempoFabricacion || '—'}
+            </div>
+
+            <!-- CTA -->
+            <a href="https://wa.me/${waNum}?text=${waText}" target="_blank"
+               style="display:flex;align-items:center;justify-content:center;gap:.5rem;
+                   padding:.65rem;border-radius:10px;background:${gradBtn};
+                   color:#fff;font-weight:700;font-size:.82rem;text-decoration:none;
+                   transition:opacity .2s"
+               onmouseover="this.style.opacity='.85'"
+               onmouseout="this.style.opacity='1'">
+                <i data-lucide="message-circle" style="width:14px;height:14px"></i>
+                Cotizar por WhatsApp
+            </a>
+        </div>
+    </div>`;
+}
+
+// ── Tarjeta bloqueada (preview difuminado) ────────────────────
+function _cardVIPBloqueada(p) {
+    const esElite   = p.nivelRequerido === 'Elite';
+    const label     = esElite ? '⚡ Exclusivo Elite' : '⭐ Exclusivo Premium';
+    const req       = esElite ? 'Requiere insignia Platino o superior' : 'Requiere insignia Esmeralda o superior';
+    const colorLine = esElite ? '#a855f7' : '#f59e0b';
+
+    return `
+    <div style="border-radius:16px;overflow:hidden;position:relative;
+        border:1px solid rgba(255,255,255,.06);background:#111118">
+        <!-- Contenido difuminado -->
+        <div style="filter:blur(5px) brightness(.35);pointer-events:none;user-select:none">
+            <div style="height:160px;background:#1c1c27;display:flex;
+                align-items:center;justify-content:center;font-size:4rem">
+                ${p.imagen}
+            </div>
+            <div style="padding:1.25rem">
+                <div style="height:.75rem;background:#2d2d3d;border-radius:4px;margin-bottom:.75rem;width:45%"></div>
+                <div style="height:1.1rem;background:#2d2d3d;border-radius:4px;margin-bottom:.5rem"></div>
+                <div style="height:1rem;background:#2d2d3d;border-radius:4px;margin-bottom:.5rem;width:75%"></div>
+                <div style="height:.8rem;background:#2d2d3d;border-radius:4px;width:55%"></div>
+            </div>
+        </div>
+        <!-- Overlay de bloqueo -->
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;
+            align-items:center;justify-content:center;
+            background:rgba(10,10,15,.55);text-align:center;padding:1.5rem">
+            <div style="width:48px;height:48px;background:rgba(255,255,255,.06);
+                border-radius:50%;display:flex;align-items:center;justify-content:center;
+                font-size:1.5rem;margin-bottom:.75rem">🔒</div>
+            <div style="color:#fff;font-weight:800;font-size:.875rem;margin-bottom:.3rem">
+                ${label}
+            </div>
+            <div style="font-size:.72rem;color:rgba(255,255,255,.4);margin-bottom:1.25rem;
+                border:1px solid ${colorLine}33;padding:4px 12px;border-radius:20px">
+                ${req}
+            </div>
+            <button onclick="navigateTo('perfil')"
+                style="padding:6px 18px;border-radius:20px;font-size:.75rem;font-weight:700;
+                background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+                color:rgba(255,255,255,.7);cursor:pointer">
+                Ver mis insignias
+            </button>
+        </div>
+    </div>`;
+}
+
+// ── PÁGINA PRINCIPAL: Catálogo VIP ────────────────────────────
+function renderCatalogoVIP() {
+    const user       = typeof getUser === 'function' ? getUser() : null;
+    const nivel      = typeof getNivelVIPUsuario === 'function' ? getNivelVIPUsuario() : null;
+    const puedeVer   = typeof puedeVerVIP === 'function' ? puedeVerVIP() : false;
+    const esElite    = typeof puedeVerVIPElite === 'function' ? puedeVerVIPElite() : false;
+    const insignia   = typeof calcularInsigniaActual === 'function' ? calcularInsigniaActual() : null;
+    const accesibles = puedeVer && typeof getProductosVIPAccesibles === 'function'
+        ? getProductosVIPAccesibles() : [];
+    const bloqueados = typeof getProductosVIPBloqueados === 'function'
+        ? getProductosVIPBloqueados() : [];
+
+    // ── Sin sesión ────────────────────────────────────────────
+    if (!user) {
+        return `
+        <div class="fade-in">
+            ${_renderVipHero()}
+            <div style="max-width:520px;margin:0 auto;text-align:center;padding:2rem 1rem">
+                <div style="font-size:3.5rem;margin-bottom:1rem">🔑</div>
+                <h2 style="color:var(--ink-900,#111);font-family:'Playfair Display',serif;
+                    font-size:1.6rem;margin-bottom:.75rem">Acceso Exclusivo</h2>
+                <p style="color:var(--ink-400,#6b7280);margin-bottom:2rem;line-height:1.65;font-size:.9rem">
+                    El catálogo VIP es exclusivo para clientes con insignia
+                    <strong>Esmeralda o superior</strong>.
+                    Crea tu cuenta gratis y empieza a acumular compras.
+                </p>
+                <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+                    <button onclick="navigateTo('perfil')" class="btn btn-primary">
+                        <i data-lucide="user-plus"></i> Crear Cuenta Gratis
+                    </button>
+                    <button onclick="navigateTo('catalogo-muebleria-interior')" class="btn btn-ghost">
+                        <i data-lucide="layout-grid"></i> Ver Catálogo General
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    // ── Logueado pero sin nivel VIP ───────────────────────────
+    if (!puedeVer) {
+        const comprasActuales        = user.compras || 0;
+        const comprasFaltanEsmeralda = Math.max(0, 5 - comprasActuales);
+        const pathInsignias = [
+            { icono:'💚', nombre:'Esmeralda', nivel:'Premium', compras:5,  color:'#10b981' },
+            { icono:'💙', nombre:'Zafiro',    nivel:'Premium', compras:8,  color:'#3b82f6' },
+            { icono:'🔱', nombre:'Platino',   nivel:'Elite',   compras:35, color:'#a855f7' },
+        ];
+        return `
+        <div class="fade-in">
+            ${_renderVipHero()}
+            <div style="max-width:640px;margin:0 auto;padding:0 1rem">
+
+                <!-- Estado actual del cliente -->
+                <div style="background:var(--color-white,#fff);border:2px solid var(--ink-200,#e5e7eb);
+                    border-radius:16px;padding:1.5rem;margin-bottom:1.75rem">
+                    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem">
+                        <span style="font-size:2.5rem">${insignia?.icono||'🥉'}</span>
+                        <div style="flex:1">
+                            <div style="font-weight:800;color:var(--ink-900,#111)">
+                                ${insignia?.nombre||'Bronce'} — ${insignia?.nivel||'Simple'}
+                            </div>
+                            <div style="font-size:.8rem;color:var(--ink-400,#9ca3af)">Tu insignia actual</div>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="font-size:1.75rem;font-weight:900;color:var(--gold-500,#f59e0b)">
+                                ${comprasActuales}
+                            </div>
+                            <div style="font-size:.72rem;color:var(--ink-400,#9ca3af)">compras</div>
+                        </div>
+                    </div>
+                    <div style="background:var(--ink-50,#f9fafb);border-radius:8px;
+                        padding:.875rem;text-align:center;
+                        border:1px dashed var(--gold-400,#fbbf24)">
+                        <span style="font-size:.85rem;color:var(--ink-600,#3f3f55)">
+                            🎯 Te faltan
+                            <strong style="color:var(--gold-600,#d97706)">
+                                ${comprasFaltanEsmeralda} compra${comprasFaltanEsmeralda!==1?'s':''}
+                            </strong>
+                            para desbloquear el catálogo VIP
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Path de insignias -->
+                <h3 style="font-family:'Playfair Display',serif;font-size:1.2rem;
+                    font-weight:800;text-align:center;margin-bottom:1.25rem;
+                    color:var(--ink-900,#111)">
+                    Cómo desbloquear el Catálogo VIP
+                </h3>
+                <div style="display:grid;gap:.75rem;margin-bottom:2rem">
+                    ${pathInsignias.map(ins => {
+                        const faltan        = Math.max(0, ins.compras - comprasActuales);
+                        const desbloqueado  = comprasActuales >= ins.compras;
+                        return `
+                        <div style="background:${desbloqueado ? ins.color + '14' : 'var(--ink-50,#f9fafb)'};
+                            border:1.5px solid ${desbloqueado ? ins.color + '55' : 'var(--ink-200,#e5e7eb)'};
+                            border-radius:12px;padding:1rem;
+                            display:flex;align-items:center;gap:1rem">
+                            <span style="font-size:2rem">${ins.icono}</span>
+                            <div style="flex:1">
+                                <div style="font-weight:700;font-size:.875rem;
+                                    color:var(--ink-800,#1c1c27)">${ins.nombre}</div>
+                                <div style="font-size:.75rem;color:var(--ink-400,#9ca3af)">
+                                    Nivel ${ins.nivel} · ${ins.compras} compras
+                                </div>
+                            </div>
+                            <div style="text-align:right;font-size:.8rem">
+                                ${desbloqueado
+                                    ? `<span style="color:${ins.color};font-weight:800">✅ Desbloqueado</span>`
+                                    : `<div style="color:var(--ink-400,#9ca3af)">${ins.compras} compras</div>
+                                       <div style="color:var(--gold-600,#d97706);font-weight:700">faltan ${faltan}</div>`
+                                }
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>
+
+                <!-- Preview bloqueado -->
+                <p style="text-align:center;font-size:.8rem;font-weight:700;
+                    color:var(--ink-400,#9ca3af);letter-spacing:.08em;
+                    text-transform:uppercase;margin-bottom:1rem">
+                    Vista previa — ${typeof productosVIP!=='undefined'?productosVIP.filter(p=>p.nivelRequerido==='Premium').length:7} productos exclusivos esperándote
+                </p>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+                    gap:1rem;margin-bottom:2rem">
+                    ${(typeof productosVIP!=='undefined'?productosVIP.filter(p=>p.nivelRequerido==='Premium').slice(0,4):[])
+                        .map(p => _cardVIPBloqueada(p)).join('')}
+                </div>
+
+                <div style="text-align:center">
+                    <button onclick="navigateTo('catalogo-muebleria-interior')" class="btn btn-ghost">
+                        Ver Catálogo General
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    // ── Usuario con acceso VIP ────────────────────────────────
+    const productosPremium = accesibles.filter(p => p.nivelRequerido === 'Premium');
+    const productosElite   = accesibles.filter(p => p.nivelRequerido === 'Elite');
+    const waNum = (typeof contactInfo !== 'undefined') ? contactInfo.whatsapp : '593985998615';
+    const descuento = insignia?.descuento || 0;
+
+    return `
+    <div class="fade-in">
+        ${_renderVipHero(nivel, insignia)}
+
+        <div style="max-width:1200px;margin:0 auto;padding:0 1rem">
+
+            <!-- Bienvenida personalizada -->
+            <div style="background:linear-gradient(135deg,#111118,#1c1c27);
+                border:1px solid rgba(245,158,11,.2);border-radius:16px;
+                padding:1.25rem 1.5rem;margin-bottom:2.5rem;
+                display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+                <span style="font-size:2.5rem">${insignia?.icono||'⭐'}</span>
+                <div style="flex:1;min-width:200px">
+                    <div style="color:#fff;font-weight:800;font-size:1rem">
+                        ¡Bienvenido, ${user.nombre}! — Acceso ${esElite ? '⚡ Elite' : '⭐ VIP Premium'}
+                    </div>
+                    <div style="font-size:.8rem;color:rgba(255,255,255,.4);margin-top:.2rem">
+                        ${esElite
+                            ? 'Tienes acceso completo a toda la colección, incluidos los diseños Elite exclusivos.'
+                            : `Tienes acceso a ${productosPremium.length} productos VIP Premium.${bloqueados.length > 0 ? ` ${bloqueados.length} productos Elite requieren insignia Platino.` : ''}`
+                        }
+                    </div>
+                </div>
+                ${descuento > 0 ? `
+                <div style="font-size:.78rem;color:#f59e0b;font-weight:800;
+                    background:rgba(245,158,11,.1);padding:5px 14px;border-radius:20px;
+                    border:1px solid rgba(245,158,11,.25);white-space:nowrap">
+                    🎉 ${descuento}% de descuento activo
+                </div>` : ''}
+            </div>
+
+            <!-- Sección Premium -->
+            ${productosPremium.length > 0 ? `
+            <div style="margin-bottom:3rem">
+                <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap">
+                    <h2 style="color:#fff;font-family:'Playfair Display',serif;
+                        font-size:1.35rem;font-weight:800">⭐ Colección VIP Premium</h2>
+                    <span style="font-size:.72rem;background:rgba(245,158,11,.12);
+                        color:#f59e0b;padding:3px 10px;border-radius:20px;
+                        font-weight:700;border:1px solid rgba(245,158,11,.22)">
+                        ${productosPremium.length} productos
+                    </span>
+                </div>
+                <div style="display:grid;
+                    grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1.25rem">
+                    ${productosPremium.map(p => _cardVIP(p, nivel)).join('')}
+                </div>
+            </div>` : ''}
+
+            <!-- Sección Elite (solo visible si es Elite) -->
+            ${esElite && productosElite.length > 0 ? `
+            <div style="margin-bottom:3rem">
+                <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap">
+                    <h2 style="font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:800;
+                        background:linear-gradient(135deg,#a855f7,#7c3aed);
+                        -webkit-background-clip:text;-webkit-text-fill-color:transparent">
+                        ⚡ Colección Elite Exclusiva
+                    </h2>
+                    <span style="font-size:.72rem;background:rgba(168,85,247,.12);
+                        color:#a855f7;padding:3px 10px;border-radius:20px;
+                        font-weight:700;border:1px solid rgba(168,85,247,.22)">
+                        ${productosElite.length} exclusivos
+                    </span>
+                </div>
+                <div style="display:grid;
+                    grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1.25rem">
+                    ${productosElite.map(p => _cardVIP(p, nivel)).join('')}
+                </div>
+            </div>` : ''}
+
+            <!-- Bloqueados Elite (visibles para Premium pero bloqueados) -->
+            ${!esElite && bloqueados.length > 0 ? `
+            <div style="margin-bottom:2.5rem">
+                <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem">
+                    <h3 style="color:rgba(255,255,255,.35);font-family:'Playfair Display',serif;
+                        font-size:1.1rem">🔒 Colección Elite — Requiere insignia Platino</h3>
+                </div>
+                <div style="display:grid;
+                    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;opacity:.8">
+                    ${bloqueados.slice(0,3).map(p => _cardVIPBloqueada(p)).join('')}
+                </div>
+            </div>` : ''}
+
+            <!-- CTA WhatsApp VIP -->
+            <div style="background:linear-gradient(135deg,#0d2b1a,#1a3d26);
+                border:1px solid rgba(16,185,129,.22);border-radius:20px;
+                padding:2rem;text-align:center;margin-bottom:2rem">
+                <div style="font-size:2rem;margin-bottom:.75rem">💬</div>
+                <h3 style="color:#fff;font-family:'Playfair Display',serif;
+                    font-size:1.2rem;margin-bottom:.5rem">
+                    ¿Necesitas asesoría personalizada?
+                </h3>
+                <p style="color:rgba(255,255,255,.5);font-size:.875rem;margin-bottom:1.25rem">
+                    Como cliente ${insignia?.nombre||'VIP'}, tienes atención preferencial
+                    directa con el Maestro Benjamín.
+                </p>
+                <a href="https://wa.me/${waNum}?text=${encodeURIComponent('Hola, soy cliente '+nivel+' ('+user.nombre+') y quisiera asesoría sobre el catálogo VIP.')}"
+                   target="_blank" class="btn btn-success">
+                    <i data-lucide="message-circle"></i>
+                    Atención Preferencial — WhatsApp
+                </a>
+            </div>
+
+        </div>
+    </div>`;
+}
+
+// ── ADMIN VIP: Sección de gestión de productos VIP ────────────
+// Esta función se llama desde renderAdminProductos() con el tab VIP activo
+function renderAdminVIPSection() {
+    const lista = typeof getProductosVIPAdmin === 'function'
+        ? getProductosVIPAdmin() : [];
+    const premiums = lista.filter(p => p.nivelRequerido === 'Premium');
+    const elites   = lista.filter(p => p.nivelRequerido === 'Elite');
+
+    return `
+    <div id="seccionVIP">
+        <div style="display:flex;justify-content:space-between;align-items:center;
+            margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem">
+            <div>
+                <h3 style="margin:0;font-size:1.1rem;font-weight:800">
+                    ⭐ Catálogo VIP — ${lista.length} productos
+                </h3>
+                <p style="font-size:.8rem;color:var(--ink-400,#6b7280);margin:.25rem 0 0">
+                    ${premiums.length} Premium · ${elites.length} Elite
+                </p>
+            </div>
+            <button onclick="abrirModalVIP(null)" class="btn btn-primary btn-sm">
+                <i data-lucide="plus"></i> Añadir Producto VIP
+            </button>
+        </div>
+
+        <!-- Premium -->
+        ${premiums.length > 0 ? `
+        <div class="card mb-3">
+            <div class="card-header-admin">
+                <h4 style="margin:0;font-size:.95rem">⭐ Nivel Premium — ${premiums.length} productos</h4>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-3">
+                    ${premiums.map(p => `
+                    <div class="producto-admin-card">
+                        <div class="producto-admin-header">
+                            <span class="producto-icono">${p.imagenUrl
+                                ? `<img src="${p.imagenUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:8px">`
+                                : p.imagen}</span>
+                            <div>
+                                <h5 style="margin:0;font-size:.85rem">${p.nombre}</h5>
+                                <span style="font-size:.7rem;color:var(--color-primary,#f59e0b);font-weight:700">
+                                    Desde $${(p.precio||0).toLocaleString()}
+                                </span>
+                                <div style="font-family:monospace;font-size:.65rem;
+                                    color:var(--ink-400,#9ca3af)">${p.codigo||p.id}</div>
+                            </div>
+                        </div>
+                        <div class="producto-admin-footer">
+                            <button onclick="abrirModalVIP('${p.id}')"
+                                class="btn btn-secondary btn-sm">
+                                <i data-lucide="edit-2"></i> Editar
+                            </button>
+                            <button onclick="confirmarEliminarVIP('${p.id}','${p.nombre.replace(/'/g,'')}')"
+                                class="btn btn-danger btn-sm">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                        </div>
+                    </div>`).join('')}
+                </div>
+            </div>
+        </div>` : ''}
+
+        <!-- Elite -->
+        ${elites.length > 0 ? `
+        <div class="card mb-3">
+            <div class="card-header-admin" style="background:linear-gradient(135deg,#5b21b6,#7c3aed)">
+                <h4 style="margin:0;font-size:.95rem">⚡ Nivel Elite — ${elites.length} productos</h4>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-3">
+                    ${elites.map(p => `
+                    <div class="producto-admin-card" style="border:2px solid rgba(168,85,247,.2)">
+                        <div class="producto-admin-header">
+                            <span class="producto-icono">${p.imagenUrl
+                                ? `<img src="${p.imagenUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:8px">`
+                                : p.imagen}</span>
+                            <div>
+                                <h5 style="margin:0;font-size:.85rem">${p.nombre}</h5>
+                                <span style="font-size:.7rem;color:#a855f7;font-weight:700">
+                                    Desde $${(p.precio||0).toLocaleString()}
+                                </span>
+                                <div style="font-family:monospace;font-size:.65rem;color:var(--ink-400,#9ca3af)">
+                                    ${p.codigo||p.id}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="producto-admin-footer">
+                            <button onclick="abrirModalVIP('${p.id}')"
+                                class="btn btn-secondary btn-sm">
+                                <i data-lucide="edit-2"></i> Editar
+                            </button>
+                            <button onclick="confirmarEliminarVIP('${p.id}','${p.nombre.replace(/'/g,'')}')"
+                                class="btn btn-danger btn-sm">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                        </div>
+                    </div>`).join('')}
+                </div>
+            </div>
+        </div>` : ''}
+
+        ${lista.length === 0 ? `
+        <div class="alert alert-warning">
+            <i data-lucide="star"></i>
+            <p>No hay productos VIP. Agrega el primero con el botón "Añadir Producto VIP".</p>
+        </div>` : ''}
+
+        <!-- Modal VIP -->
+        <div id="modalVIP" class="modal-overlay hidden">
+            <div class="modal-content" style="max-width:560px">
+                <div class="modal-header">
+                    <h2 id="modalVIPTitulo">Producto VIP</h2>
+                    <button class="btn-close" onclick="document.getElementById('modalVIP').classList.add('hidden')">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalVIPBody"></div>
+            </div>
+        </div>
+    </div>`;
+}
+
+// ── Modal VIP ────────────────────────────────────────────────
+function abrirModalVIP(id) {
+    const lista = typeof getProductosVIPAdmin === 'function' ? getProductosVIPAdmin() : [];
+    const p     = id ? lista.find(x => x.id === id) : null;
+
+    document.getElementById('modalVIPTitulo').textContent = p ? 'Editar Producto VIP' : 'Nuevo Producto VIP';
+    document.getElementById('modalVIPBody').innerHTML = `
+    <div class="grid grid-2">
+        <div class="form-group">
+            <label class="form-label">Nombre *</label>
+            <input type="text" id="vipNombre" class="form-input" value="${p?.nombre||''}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Código</label>
+            <input type="text" id="vipCodigo" class="form-input"
+                value="${p?.codigo||''}" placeholder="PMT-V01"
+                style="font-family:monospace;text-transform:uppercase">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Precio base ($) *</label>
+            <input type="number" id="vipPrecio" class="form-input" min="1" value="${p?.precio||''}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Nivel Requerido *</label>
+            <select id="vipNivel" class="form-select">
+                <option value="Premium" ${(p?.nivelRequerido||'Premium')==='Premium'?'selected':''}>⭐ Premium (Esmeralda+)</option>
+                <option value="Elite"   ${p?.nivelRequerido==='Elite'?'selected':''}>⚡ Elite (Platino+)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Emoji / ícono</label>
+            <input type="text" id="vipEmoji" class="form-input" value="${p?.imagen||'📦'}" maxlength="4">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Tiempo de fabricación</label>
+            <input type="text" id="vipTiempo" class="form-input"
+                value="${p?.tiempoFabricacion||''}" placeholder="15–20 días hábiles">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Categoría</label>
+        <input type="text" id="vipCategoria" class="form-input"
+            value="${p?.categoria||''}" placeholder="Mueblería Interior VIP">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Descripción *</label>
+        <textarea id="vipDesc" class="form-textarea" rows="3">${p?.descripcion||''}</textarea>
+    </div>
+    <div class="form-group">
+        <label class="form-label">
+            Características VIP <small style="color:var(--ink-400);font-weight:400">(una por línea)</small>
+        </label>
+        <textarea id="vipCaract" class="form-textarea" rows="4"
+            placeholder="Herrajes Blum Austria importados
+Diseño personalizado incluido">${(p?.caracteristicasVIP||[]).join('\n')}</textarea>
+    </div>
+    <div class="form-group">
+        <label class="form-label">
+            Colores (códigos separados por coma)
+            <small style="color:var(--ink-400);font-weight:400">C001, C003...</small>
+        </label>
+        <input type="text" id="vipColores" class="form-input"
+            value="${(p?.colores||[]).join(', ')}"
+            placeholder="C001, C003, C008" style="font-family:monospace">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Acabados (separados por coma)</label>
+        <input type="text" id="vipAcabados" class="form-input" value="${(p?.acabados||[]).join(', ')}">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Materiales (separados por coma)</label>
+        <input type="text" id="vipMateriales" class="form-input" value="${(p?.materiales||[]).join(', ')}">
+    </div>
+    <div class="flex gap-2 mt-3">
+        <button onclick="guardarProductoVIP('${id||''}')" class="btn btn-primary" style="flex:1">
+            <i data-lucide="save"></i> Guardar
+        </button>
+        <button onclick="document.getElementById('modalVIP').classList.add('hidden')"
+            class="btn btn-secondary">Cancelar</button>
+    </div>`;
+
+    document.getElementById('modalVIP').classList.remove('hidden');
+    lucide.createIcons();
+}
+
+function guardarProductoVIP(id) {
+    const nombre = document.getElementById('vipNombre').value.trim();
+    const precio = parseFloat(document.getElementById('vipPrecio').value);
+    const desc   = document.getElementById('vipDesc').value.trim();
+    if (!nombre || !precio || !desc) {
+        showNotification('Completa los campos obligatorios', 'error'); return;
+    }
+    const data = {
+        nombre,
+        codigo:           document.getElementById('vipCodigo').value.trim().toUpperCase(),
+        precio,
+        nivelRequerido:   document.getElementById('vipNivel').value,
+        imagen:           document.getElementById('vipEmoji').value.trim() || '📦',
+        categoria:        document.getElementById('vipCategoria').value.trim(),
+        descripcion:      desc,
+        tiempoFabricacion:document.getElementById('vipTiempo').value.trim(),
+        caracteristicasVIP: document.getElementById('vipCaract').value.split('\n').map(s=>s.trim()).filter(Boolean),
+        colores:          document.getElementById('vipColores').value.split(',').map(s=>s.trim()).filter(Boolean),
+        acabados:         document.getElementById('vipAcabados').value.split(',').map(s=>s.trim()).filter(Boolean),
+        materiales:       document.getElementById('vipMateriales').value.split(',').map(s=>s.trim()).filter(Boolean),
+        imagenUrl:        '',
+        precioLabel:      'desde',
+    };
+
+    if (id) {
+        updateProductoVIPAdmin(id, data);
+        showNotification('✅ Producto VIP actualizado', 'success');
+    } else {
+        addProductoVIPAdmin(data);
+        showNotification('✅ Producto VIP añadido', 'success');
+    }
+
+    document.getElementById('modalVIP').classList.add('hidden');
+    // Re-render la sección VIP
+    const sec = document.getElementById('seccionVIP');
+    if (sec) sec.outerHTML = renderAdminVIPSection();
+    else navigateTo('admin-productos');
+    lucide.createIcons();
+}
+
+function confirmarEliminarVIP(id, nombre) {
+    if (!confirm(`¿Eliminar el producto VIP "${nombre}"?`)) return;
+    deleteProductoVIPAdmin(id);
+    showNotification('Producto VIP eliminado', 'info');
+    const sec = document.getElementById('seccionVIP');
+    if (sec) sec.outerHTML = renderAdminVIPSection();
+    else navigateTo('admin-productos');
+    lucide.createIcons();
+}
+
+// ── Switcher de tabs admin productos ─────────────────────────
+// Llamado desde los botones de tab en renderAdminProductos()
+function switchAdminProductosTab(tab) {
+    const secGeneral = document.getElementById('tabGeneral');
+    const secVIP     = document.getElementById('tabVIP');
+    const btnGeneral = document.getElementById('btnTabGeneral');
+    const btnVIP     = document.getElementById('btnTabVIP');
+    if (tab === 'vip') {
+        if (secGeneral) secGeneral.classList.add('hidden');
+        if (secVIP)     secVIP.classList.remove('hidden');
+        if (btnGeneral) { btnGeneral.style.background='transparent'; btnGeneral.style.color='var(--ink-600,#3f3f55)'; }
+        if (btnVIP)     { btnVIP.style.background='var(--gold-500,#f59e0b)'; btnVIP.style.color='#fff'; }
+    } else {
+        if (secVIP)     secVIP.classList.add('hidden');
+        if (secGeneral) secGeneral.classList.remove('hidden');
+        if (btnVIP)     { btnVIP.style.background='transparent'; btnVIP.style.color='var(--ink-600,#3f3f55)'; }
+        if (btnGeneral) { btnGeneral.style.background='var(--gold-500,#f59e0b)'; btnGeneral.style.color='#fff'; }
+    }
+}
                 </div>
             </div>
         </div>
