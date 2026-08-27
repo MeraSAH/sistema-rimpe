@@ -15,14 +15,16 @@
 // ========================================
 
 // 🔧 REEMPLAZA con la configuración de tu proyecto Firebase
-// (Firebase Console → ⚙️ Configuración del proyecto → "Tus apps" → SDK setup and configuration)
-const FIREBASE_CONFIG = {
-    apiKey:           "TU_API_KEY",
-    authDomain:       "TU_PROYECTO.firebaseapp.com",
-    projectId:        "TU_PROYECTO",
-    storageBucket:    "TU_PROYECTO.appspot.com",
-    messagingSenderId:"TU_SENDER_ID",
-    appId:            "TU_APP_ID"
+// (Firebase Console → ⚙️ Configuración del proyecto → "Tus apps" → SDK setup and configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyB-dROCFBg075fp8bK_eBlZPmJST8Y5YiU",
+  authDomain: "muebleriaycerrajeria-benjamin.firebaseapp.com",
+  projectId: "muebleriaycerrajeria-benjamin",
+  storageBucket: "muebleriaycerrajeria-benjamin.firebasestorage.app",
+  messagingSenderId: "413810060846",
+  appId: "1:413810060846:web:d238436fed3a333e16f9bf",
+  measurementId: "G-TX31YPBRHX"
 };
 
 // ─── Cliente ──────────────────────────────────────────────────────────────────
