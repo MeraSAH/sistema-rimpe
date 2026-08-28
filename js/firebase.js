@@ -515,20 +515,37 @@ async function supabaseResetPassword(email) {
 async function clienteRegister(email, password, perfil) {
     const auth = getAuthSDK();
     const db   = getDB();
+    const cedula = (perfil.cedula || '').trim();
+
+    if (!cedula) {
+        return { ok: false, error: 'La cédula es obligatoria para crear una cuenta.' };
+    }
+
     if (!auth || !isSupabaseConfigured()) {
-        // Fallback: guardar solo local
+        const registrados = JSON.parse(localStorage.getItem('clientesRegistrados') || '[]');
+        if (registrados.some(c => c.cedula === cedula)) {
+            return { ok: false, error: 'CEDULA_DUPLICADA' };
+        }
         localStorage.setItem('benjaminUser', JSON.stringify({
             ...perfil, email, compras: 0,
             fechaRegistro: new Date().toISOString(), pedidos: []
         }));
         return { ok: true, local: true };
     }
+
     try {
+        if (db) {
+            const dup = await db.collection('cedulas_registradas').doc(cedula).get();
+            if (dup.exists) {
+                return { ok: false, error: 'CEDULA_DUPLICADA' };
+            }
+        }
+
         const cred = await auth.createUserWithEmailAndPassword(email, password);
         const uid  = cred.user.uid;
 
         const userLocal = {
-            ...perfil, email, compras: 0,
+            ...perfil, cedula, email, compras: 0,
             fechaRegistro: new Date().toISOString(), pedidos: [],
             firebaseUid: uid
         };
@@ -538,13 +555,16 @@ async function clienteRegister(email, password, perfil) {
             await db.collection('usuarios').doc(uid).set({
                 nombre:     perfil.nombre,
                 telefono:   perfil.telefono,
-                cedula:     perfil.cedula     || '',
+                cedula,
                 direccion:  perfil.direccion  || '',
                 ciudad:     perfil.ciudad     || 'Quito',
                 referencia: perfil.referencia || '',
                 email, compras: 0, rol: 'cliente',
                 fechaRegistro: new Date().toISOString()
             }, { merge: true });
+            await db.collection('cedulas_registradas').doc(cedula).set({
+                uid, email, fecha: new Date().toISOString()
+            });
         }
 
         if (typeof _registrarClienteEnDB === 'function') _registrarClienteEnDB(userLocal);
