@@ -88,10 +88,11 @@ function updateProductPrice(productoId) {
     document.getElementById(`price-${productoId}`).textContent = precio.toFixed(2);
 }
 
-// Buscar producto por ID
+// Buscar producto por ID — usa el catálogo con productos del admin incluidos
 function findProductById(id) {
-    for (let categoria in productos) {
-        const producto = productos[categoria].find(p => p.id === id);
+    const cat = (typeof getProductosCatalogo === 'function') ? getProductosCatalogo() : productos;
+    for (let categoria in cat) {
+        const producto = (cat[categoria] || []).find(p => p.id == id);
         if (producto) return producto;
     }
     return null;
