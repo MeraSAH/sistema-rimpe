@@ -142,10 +142,7 @@ function puedeDejarTestimonio(user) {
 
     // Debe tener al menos 1 nota de venta
     const notas = typeof getNotasVenta === 'function' ? getNotasVenta() : [];
-    const misNotas = notas.filter(n =>
-        (user.cedula && n.cliente?.cedula === user.cedula) ||
-        (user.email  && n.cliente?.email  === user.email)
-    );
+    const misNotas = notas.filter(n => user.cedula && n.cliente?.cedula === user.cedula);
     if (misNotas.length === 0) {
         return { puede: false, razon: 'Necesitas al menos una compra realizada para dejar un testimonio' };
     }
