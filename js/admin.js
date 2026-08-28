@@ -141,7 +141,7 @@ function getClientesList() {
     const notas = getNotasVenta();
     const map   = {};
     notas.forEach(nota => {
-        const ced = nota.cliente?.cedula || nota.cliente?.email || 'sin-cedula';
+        const ced = nota.cliente?.cedula || 'sin-cedula';
         if (!map[ced]) map[ced] = { ...nota.cliente, notas: [], totalFacturado: 0 };
         map[ced].notas.push(nota);
         map[ced].totalFacturado += nota.total || 0;
@@ -150,7 +150,7 @@ function getClientesList() {
     // 2. Clientes registrados en la web (sin nota aún)
     const registrados = JSON.parse(localStorage.getItem('clientesRegistrados') || '[]');
     registrados.forEach(c => {
-        const clave = c.cedula || c.email || 'sin-cedula';
+        const clave = c.cedula || 'sin-cedula';
         if (!map[clave]) {
             // No tiene notas aún — añadirlo igual
             map[clave] = { ...c, notas: [], totalFacturado: 0 };
