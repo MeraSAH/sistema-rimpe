@@ -101,6 +101,7 @@ function savePedido(pedidoData) {
     const nuevoPedido = {
         id: Date.now(),
         usuario: user.email,
+        cedula: user.cedula || '',
         fecha: new Date().toISOString(),
         estado: 'por-iniciar',
         ...pedidoData
@@ -127,10 +128,10 @@ function getPedidos() {
 // Obtener pedidos del usuario actual
 function getUserPedidos() {
     const user = getUser();
-    if (!user) return [];
+    if (!user || !user.cedula) return [];
 
     const allPedidos = getPedidos();
-    return allPedidos.filter(pedido => pedido.usuario === user.email);
+    return allPedidos.filter(pedido => pedido.cedula === user.cedula);
 }
 
 // Actualizar estado del pedido
