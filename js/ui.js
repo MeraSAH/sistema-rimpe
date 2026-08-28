@@ -13,7 +13,7 @@ function createProductCard(producto) {
             </div>
             <div class="card-body">
                 <div class="product-price">
-                    $<span id="price-${producto.id}">135</span>
+                    $<span id="price-${producto.id}">${producto.precio}</span>
                     <span class="price-label">aprox.</span>
                 </div>
 
