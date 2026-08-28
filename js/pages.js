@@ -477,10 +477,7 @@ function renderPerfil() {
 
     // Mis Notas — filtradas por cédula
     const todasNotas = typeof getNotasVenta === 'function' ? getNotasVenta() : [];
-    const misNotas   = todasNotas.filter(n =>
-        (user.cedula && n.cliente?.cedula === user.cedula) ||
-        (user.email  && n.cliente?.email  === user.email)
-    );
+    const misNotas   = todasNotas.filter(n => user.cedula && n.cliente?.cedula === user.cedula);
 
     // Mis Pedidos (carrito enviado)
     const misPedidos = pedidos;
@@ -2966,6 +2963,7 @@ async function handleRegister() {
     } else {
         let msg = result.error || 'Error al crear la cuenta.';
         if (result.error?.includes('already registered')) msg = 'Este email ya está registrado. Usa Iniciar Sesión.';
+        if (result.error === 'CEDULA_DUPLICADA') msg = 'Ya existe una cuenta registrada con esta cédula. Usa Iniciar Sesión o recupera tu contraseña.';
         if (errMsg) errMsg.textContent = msg;
         if (errDiv) errDiv.classList.remove('hidden');
         if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="user-plus"></i> Crear Cuenta Gratis'; lucide.createIcons(); }
