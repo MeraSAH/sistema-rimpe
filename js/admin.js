@@ -436,10 +436,12 @@ ${nota.estado === 'cancelada' ? `
   </div>
 
   <!-- CLIENTE -->
+  <!-- CLIENTE -->
   <div class="client-section">
     <div class="section-title">DATOS DEL CLIENTE</div>
     <div class="client-grid">
-      <div class="field"><label>Nombre:</label><span>${nota.cliente.nombre}</span></div>
+      ${nota.cliente.razonSocial ? `<div class="field" style="grid-column:1/-1"><label>Razón Social:</label><span style="font-weight:700">${nota.cliente.razonSocial}</span></div>` : ''}
+      <div class="field"><label>${nota.cliente.razonSocial ? 'Propietario/Contacto:' : 'Nombre:'}</label><span>${nota.cliente.nombre}</span></div>
       <div class="field"><label>Cédula/RUC:</label><span>${nota.cliente.cedula}</span></div>
       <div class="field"><label>Teléfono:</label><span>${nota.cliente.telefono || '—'}</span></div>
       <div class="field"><label>Email:</label><span>${nota.cliente.email || '—'}</span></div>
