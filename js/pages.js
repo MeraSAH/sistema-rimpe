@@ -1551,6 +1551,16 @@ function renderNuevaNota(notaEditar = null) {
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="form-label">
+                        Razón Social
+                        <small style="color:var(--color-gray-500);text-transform:none;font-weight:400">
+                            (opcional — solo si facturas a una empresa o entidad)
+                        </small>
+                    </label>
+                    <input type="text" id="clienteRazonSocial" class="form-input"
+                        placeholder="Ej: Constructora ABC S.A." value="${c.razonSocial||''}">
+                </div>
+                <div class="form-group">
                     <label class="form-label">Dirección</label>
                     <input type="text" id="clienteDireccion" class="form-input" value="${c.direccion||''}">
                 </div>
@@ -1799,11 +1809,12 @@ function generarNota(editId = null) {
 
     const notaData  = {
         cliente: {
-            nombre:    clienteNombre,
-            cedula:    clienteCedula,
-            telefono:  document.getElementById('clienteTelefono').value.trim(),
-            email:     document.getElementById('clienteEmail').value.trim(),
-            direccion: document.getElementById('clienteDireccion').value.trim()
+            nombre:      clienteNombre,
+            cedula:      clienteCedula,
+            telefono:    document.getElementById('clienteTelefono').value.trim(),
+            email:       document.getElementById('clienteEmail').value.trim(),
+            direccion:   document.getElementById('clienteDireccion').value.trim(),
+            razonSocial: document.getElementById('clienteRazonSocial')?.value.trim() || ''
         },
         items, subtotal, descuento, total,
         abonos,
@@ -3320,16 +3331,13 @@ function buscarClienteNota(query) {
 
 function rellenarClienteNota(c) {
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val||''; };
-    set('clienteNombre',    c.nombre);
-    set('clienteCedula',    c.cedula);
-    set('clienteTelefono',  c.telefono);
-    set('clienteEmail',     c.email);
-    set('clienteDireccion', c.direccion);
+    set('clienteNombre',      c.nombre);
+    set('clienteCedula',      c.cedula);
+    set('clienteTelefono',    c.telefono);
+    set('clienteEmail',       c.email);
+    set('clienteDireccion',   c.direccion);
+    set('clienteRazonSocial', c.razonSocial);
     set('buscarCliente', '');
-    const div = document.getElementById('resultadosCliente');
-    if (div) div.style.display = 'none';
-    showNotification(`✅ Cliente "${c.nombre}" cargado`, 'success');
-}
 
 // Selector de producto desde el catálogo
 function abrirSelectorProducto(btnEl) {
