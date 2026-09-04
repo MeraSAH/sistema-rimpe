@@ -3338,6 +3338,10 @@ function rellenarClienteNota(c) {
     set('clienteDireccion',   c.direccion);
     set('clienteRazonSocial', c.razonSocial);
     set('buscarCliente', '');
+    const div = document.getElementById('resultadosCliente');
+    if (div) div.style.display = 'none';
+    showNotification(`✅ Cliente "${c.nombre}" cargado`, 'success');
+}
 
 // Selector de producto desde el catálogo
 function abrirSelectorProducto(btnEl) {
